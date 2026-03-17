@@ -543,23 +543,32 @@ import ToolsTable from '../components/ToolsTable.astro';
   }
 
   @media (max-width: 768px) {
-    .comparison-grid {
-      grid-template-columns: 1fr;
+    .demo, .comparison, .features, .quickstart, .social-proof {
+      padding: 3rem 0;
     }
+    .demo-content { font-size: 0.75rem; padding: 1rem; line-height: 1.6; }
+    .demo-window { border-radius: 12px; }
+    .prompt-text { font-size: 0.8rem; }
+    .comparison-grid { grid-template-columns: 1fr; }
+    .comparison-card { padding: 1.25rem; }
+    .comparison-card li { font-size: 0.875rem; }
     .vs-badge { display: none; }
-    .features-grid {
-      grid-template-columns: 1fr;
-    }
+    .comparison-header h2 { font-size: 1.75rem; }
+    .features-grid { grid-template-columns: 1fr; }
     .steps {
       flex-direction: column;
       align-items: center;
     }
+    .step { max-width: 100%; padding: 0; }
+    .step p { font-size: 0.85rem; }
     .step-connector {
       width: 1px;
-      height: 32px;
+      height: 24px;
       background: linear-gradient(180deg, var(--border), var(--accent-glow), var(--border));
     }
     .stat-divider { display: none; }
-    .stats-grid { gap: 2rem; }
+    .stats-grid { gap: 1.5rem; flex-direction: column; }
+    .stat-value { font-size: 2rem; }
+    .compat { font-size: 0.85rem; }
   }
 </style>

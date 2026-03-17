@@ -179,8 +179,19 @@
   }
 
   @media (max-width: 768px) {
-    .hero { padding: 6rem 0 4rem; }
-    .hero h1 { font-size: 2.75rem; }
-    .subtitle { font-size: 1.05rem; }
+    .hero { padding: 5rem 0 3rem; }
+    .hero h1 { font-size: 2.25rem; line-height: 1.1; }
+    .subtitle { font-size: 0.95rem; max-width: 100%; }
+    .install-cmd { width: 100%; justify-content: center; }
+    .install-cmd code { font-size: 0.85rem; }
+    .cta-row { flex-direction: column; width: 100%; }
+    .cta-row .btn { width: 100%; }
+    .hero-badge { font-size: 0.7rem; }
+  }
+
+  @media (max-width: 480px) {
+    .hero { padding: 3.5rem 0 2.5rem; }
+    .hero h1 { font-size: 1.85rem; }
+    .subtitle { font-size: 0.9rem; }
   }
 </style>

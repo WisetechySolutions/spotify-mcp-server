@@ -118,10 +118,14 @@ const currentPath = Astro.url.pathname;
   }
 
   @media (max-width: 640px) {
+    .header-inner { height: 52px; }
+    .logo-text { font-size: 0.875rem; }
+    .logo img, .logo svg { width: 20px; height: 20px; }
     nav { gap: 0; }
     .nav-link {
-      font-size: 0.8rem;
-      padding: 0.35rem 0.6rem;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.5rem;
     }
+    .external-icon { display: none; }
   }
 </style>

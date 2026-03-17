@@ -8,6 +8,8 @@ dist/
 # Internal docs
 TODO.md
 WEBSITE_PLAN.md
+WEBAPP_PLAN.md
+RESEARCH_PROMPTS.md
 
 # OS files
 .DS_Store
