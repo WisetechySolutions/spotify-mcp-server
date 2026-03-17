@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { TokenStore } from "../../src/auth/token-store.js";
 import { randomBytes } from "node:crypto";
-import { unlink, rm } from "node:fs/promises";
+import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 

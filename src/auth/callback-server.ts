@@ -2,6 +2,14 @@ import { createServer, type Server, type IncomingMessage, type ServerResponse } 
 
 const TIMEOUT_MS = 120_000; // Auto-shutdown after 2 minutes
 
+const SECURITY_HEADERS: Record<string, string> = {
+  "Content-Type": "text/html; charset=utf-8",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Cache-Control": "no-store, no-cache, must-revalidate",
+  "Referrer-Policy": "no-referrer",
+};
+
 /**
  * Ephemeral localhost HTTP server that catches the OAuth redirect.
  * Binds to 127.0.0.1 only (not 0.0.0.0) for security.
@@ -14,6 +22,7 @@ export function startCallbackServer(
   return new Promise((resolve, reject) => {
     let server: Server;
     let timeoutId: ReturnType<typeof setTimeout>;
+    let settled = false;
 
     const shutdown = (): Promise<void> =>
       new Promise((res) => {
@@ -21,12 +30,26 @@ export function startCallbackServer(
         server.close(() => res());
       });
 
+    const settle = (
+      action: "resolve" | "reject",
+      value: { code: string; shutdown: () => Promise<void> } | Error
+    ) => {
+      if (settled) return;
+      settled = true;
+      if (action === "resolve") {
+        resolve(value as { code: string; shutdown: () => Promise<void> });
+      } else {
+        reject(value as Error);
+        shutdown();
+      }
+    };
+
     server = createServer((req: IncomingMessage, res: ServerResponse) => {
       const url = new URL(req.url ?? "/", `http://127.0.0.1:${port}`);
 
       if (url.pathname !== "/callback") {
-        res.writeHead(404, { "Content-Type": "text/plain" });
-        res.end("Not found");
+        res.writeHead(404, SECURITY_HEADERS);
+        res.end(errorPage("Not found."));
         return;
       }
 
@@ -35,36 +58,32 @@ export function startCallbackServer(
       const error = url.searchParams.get("error");
 
       if (error) {
-        res.writeHead(400, { "Content-Type": "text/html" });
+        res.writeHead(400, SECURITY_HEADERS);
         res.end(errorPage(error));
-        reject(new Error(`Spotify authorization denied: ${error}`));
-        shutdown();
+        settle("reject", new Error(`Spotify authorization denied: ${error}`));
         return;
       }
 
-      if (!code || state !== expectedState) {
-        res.writeHead(400, { "Content-Type": "text/html" });
+      if (!code || !state || state !== expectedState) {
+        res.writeHead(400, SECURITY_HEADERS);
         res.end(errorPage("Invalid callback — state mismatch or missing code."));
-        reject(new Error("Invalid OAuth callback: state mismatch or missing code"));
-        shutdown();
+        settle("reject", new Error("Invalid OAuth callback: state mismatch or missing code"));
         return;
       }
 
-      res.writeHead(200, { "Content-Type": "text/html" });
+      res.writeHead(200, SECURITY_HEADERS);
       res.end(successPage());
-      resolve({ code, shutdown });
+      settle("resolve", { code, shutdown });
     });
 
     server.listen(port, "127.0.0.1", () => {
-      // Auto-shutdown after timeout
       timeoutId = setTimeout(() => {
-        reject(new Error("OAuth callback timed out after 2 minutes."));
-        server.close();
+        settle("reject", new Error("OAuth callback timed out after 2 minutes."));
       }, TIMEOUT_MS);
     });
 
     server.on("error", (err) => {
-      reject(new Error(`Callback server failed to start: ${err.message}`));
+      settle("reject", new Error(`Callback server failed to start: ${err.message}`));
     });
   });
 }
@@ -103,10 +122,12 @@ function errorPage(error: string): string {
 </html>`;
 }
 
-function escapeHtml(s: string): string {
+/** Escape all HTML special characters including single quotes. */
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
 }

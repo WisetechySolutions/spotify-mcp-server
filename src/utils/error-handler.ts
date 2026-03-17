@@ -46,7 +46,10 @@ export function spotifyErrorToMcp(error: unknown): McpToolError {
         "Cannot reach Spotify API. Check your internet connection."
       );
     }
-    return makeError(`Error: ${error.message}`);
+    if (error.message.includes("Encryption key") || error.message.includes("decrypt")) {
+      return makeError("Token decryption failed. The encryption key may have changed or the token file may be corrupted.");
+    }
+    return makeError("An unexpected error occurred. Check server logs for details.");
   }
 
   return makeError("An unexpected error occurred.");

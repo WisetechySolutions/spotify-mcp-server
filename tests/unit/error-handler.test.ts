@@ -75,7 +75,7 @@ describe("error-handler", () => {
     it("handles generic Error", () => {
       const err = new Error("Something went wrong");
       const result = spotifyErrorToMcp(err);
-      expect(result.content[0].text).toBe("Error: Something went wrong");
+      expect(result.content[0].text).toBe("An unexpected error occurred. Check server logs for details.");
     });
 
     it("handles non-Error thrown values", () => {

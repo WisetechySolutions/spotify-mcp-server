@@ -40,8 +40,7 @@ export async function searchTracks(params: {
   const response = await spotifyFetch(`/search?${searchParams.toString()}`);
 
   if (!response.ok) {
-    const body = await response.text();
-    throw Object.assign(new Error(`Search failed: ${body}`), {
+    throw Object.assign(new Error(`Search failed (HTTP ${response.status}).`), {
       status: response.status,
     });
   }
@@ -64,23 +63,6 @@ export async function searchTracks(params: {
     query: params.query,
     total: data.tracks?.total ?? 0,
   };
-}
-
-/**
- * Search for a specific song by name and artist.
- * Constructs an optimized query using Spotify's field filters.
- */
-export async function searchTrackByNameAndArtist(params: {
-  track: string;
-  artist?: string;
-}): Promise<TrackResult | null> {
-  let query = `track:${params.track}`;
-  if (params.artist) {
-    query += ` artist:${params.artist}`;
-  }
-
-  const result = await searchTracks({ query, limit: 1 });
-  return result.tracks[0] ?? null;
 }
 
 // Spotify API response types (minimal — only what we use)

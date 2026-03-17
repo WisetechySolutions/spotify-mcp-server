@@ -38,7 +38,7 @@ export async function getMyPlaylists(params?: {
 
   const response = await spotifyFetch(`/me/playlists?${searchParams}`);
   if (!response.ok) {
-    throw Object.assign(new Error(`Failed to get playlists: ${await response.text()}`), {
+    throw Object.assign(new Error(`Failed to get playlists (HTTP ${response.status}).`), {
       status: response.status,
     });
   }
@@ -57,7 +57,7 @@ export async function getMyPlaylists(params?: {
 export async function getPlaylist(playlistId: string): Promise<PlaylistDetail> {
   const response = await spotifyFetch(`/playlists/${encodeURIComponent(playlistId)}`);
   if (!response.ok) {
-    throw Object.assign(new Error(`Failed to get playlist: ${await response.text()}`), {
+    throw Object.assign(new Error(`Failed to get playlist (HTTP ${response.status}).`), {
       status: response.status,
     });
   }
@@ -86,16 +86,8 @@ export async function createPlaylist(params: {
   description?: string;
   public?: boolean;
 }): Promise<PlaylistSummary> {
-  // First, get the current user's ID
-  const meResponse = await spotifyFetch("/me");
-  if (!meResponse.ok) {
-    throw Object.assign(new Error(`Failed to get user profile: ${await meResponse.text()}`), {
-      status: meResponse.status,
-    });
-  }
-  const me = (await meResponse.json()) as { id: string };
-
-  const response = await spotifyFetch(`/users/${encodeURIComponent(me.id)}/playlists`, {
+  // Use /me/playlists — /users/{id}/playlists returns 403 in Dev Mode (Feb 2026)
+  const response = await spotifyFetch("/me/playlists", {
     method: "POST",
     body: JSON.stringify({
       name: params.name,
@@ -105,7 +97,7 @@ export async function createPlaylist(params: {
   });
 
   if (!response.ok) {
-    throw Object.assign(new Error(`Failed to create playlist: ${await response.text()}`), {
+    throw Object.assign(new Error(`Failed to create playlist (HTTP ${response.status}).`), {
       status: response.status,
     });
   }

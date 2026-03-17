@@ -35,7 +35,7 @@ export async function addTracksToPlaylist(params: {
 
   if (!response.ok) {
     throw Object.assign(
-      new Error(`Failed to add tracks: ${await response.text()}`),
+      new Error(`Failed to add tracks (HTTP ${response.status}).`),
       { status: response.status }
     );
   }
@@ -69,7 +69,7 @@ export async function removeTracksFromPlaylist(params: {
 
   if (!response.ok) {
     throw Object.assign(
-      new Error(`Failed to remove tracks: ${await response.text()}`),
+      new Error(`Failed to remove tracks (HTTP ${response.status}).`),
       { status: response.status }
     );
   }
@@ -78,25 +78,3 @@ export async function removeTracksFromPlaylist(params: {
   return { snapshotId: data.snapshot_id };
 }
 
-/**
- * Add tracks in batches of 100 (for large playlists).
- * Returns array of snapshot IDs from each batch.
- */
-export async function addTracksInBatches(params: {
-  playlistId: string;
-  trackUris: string[];
-}): Promise<string[]> {
-  const snapshotIds: string[] = [];
-  const batchSize = 100;
-
-  for (let i = 0; i < params.trackUris.length; i += batchSize) {
-    const batch = params.trackUris.slice(i, i + batchSize);
-    const result = await addTracksToPlaylist({
-      playlistId: params.playlistId,
-      trackUris: batch,
-    });
-    snapshotIds.push(result.snapshotId);
-  }
-
-  return snapshotIds;
-}

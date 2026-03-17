@@ -25,20 +25,52 @@ describe("config", () => {
     expect(() => getConfig()).toThrow("64 hex characters");
   });
 
+  it("rejects non-hex TOKEN_ENCRYPTION_KEY", () => {
+    process.env.SPOTIFY_CLIENT_ID = "test-id";
+    process.env.TOKEN_ENCRYPTION_KEY = "g".repeat(64);
+    expect(() => getConfig()).toThrow("hex");
+  });
+
   it("parses valid config", () => {
     process.env.SPOTIFY_CLIENT_ID = "test-id";
     process.env.TOKEN_ENCRYPTION_KEY = "a".repeat(64);
     const config = getConfig();
     expect(config.SPOTIFY_CLIENT_ID).toBe("test-id");
-    expect(config.SPOTIFY_REDIRECT_URI).toBe("http://localhost:8888/callback");
+    expect(config.SPOTIFY_REDIRECT_URI).toBe("http://127.0.0.1:8888/callback");
   });
 
-  it("expands ~ in TOKEN_STORAGE_PATH", () => {
+  it("accepts custom SPOTIFY_REDIRECT_URI", () => {
+    process.env.SPOTIFY_CLIENT_ID = "test-id";
+    process.env.TOKEN_ENCRYPTION_KEY = "a".repeat(64);
+    process.env.SPOTIFY_REDIRECT_URI = "http://127.0.0.1:9999/callback";
+    const config = getConfig();
+    expect(config.SPOTIFY_REDIRECT_URI).toBe("http://127.0.0.1:9999/callback");
+  });
+
+  it("expands ~ in TOKEN_STORAGE_PATH using path.join", () => {
     process.env.SPOTIFY_CLIENT_ID = "test-id";
     process.env.TOKEN_ENCRYPTION_KEY = "a".repeat(64);
     process.env.TOKEN_STORAGE_PATH = "~/.spotify-mcp/tokens.enc";
     const config = getConfig();
     expect(config.TOKEN_STORAGE_PATH).not.toContain("~");
+    expect(config.TOKEN_STORAGE_PATH).toContain(".spotify-mcp");
+  });
+
+  it("handles absolute TOKEN_STORAGE_PATH without ~", () => {
+    process.env.SPOTIFY_CLIENT_ID = "test-id";
+    process.env.TOKEN_ENCRYPTION_KEY = "a".repeat(64);
+    process.env.TOKEN_STORAGE_PATH = "/tmp/tokens.enc";
+    const config = getConfig();
+    expect(config.TOKEN_STORAGE_PATH).toBe("/tmp/tokens.enc");
+  });
+
+  it("throws when ~ used but HOME and USERPROFILE are unset", () => {
+    process.env.SPOTIFY_CLIENT_ID = "test-id";
+    process.env.TOKEN_ENCRYPTION_KEY = "a".repeat(64);
+    process.env.TOKEN_STORAGE_PATH = "~/.spotify-mcp/tokens.enc";
+    delete process.env.HOME;
+    delete process.env.USERPROFILE;
+    expect(() => getConfig()).toThrow("HOME nor USERPROFILE");
   });
 
   it("caches config on subsequent calls", () => {
@@ -47,5 +79,12 @@ describe("config", () => {
     const a = getConfig();
     const b = getConfig();
     expect(a).toBe(b); // Same reference
+  });
+
+  it("rejects invalid SPOTIFY_REDIRECT_URI", () => {
+    process.env.SPOTIFY_CLIENT_ID = "test-id";
+    process.env.TOKEN_ENCRYPTION_KEY = "a".repeat(64);
+    process.env.SPOTIFY_REDIRECT_URI = "not-a-url";
+    expect(() => getConfig()).toThrow();
   });
 });

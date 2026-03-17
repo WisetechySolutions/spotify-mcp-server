@@ -20,8 +20,15 @@ const SCOPES = [
   "user-read-private",
 ];
 
+const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
+const MAX_RETRY_AFTER_SECONDS = 60;
+const TOKEN_EXPIRY_BUFFER_MS = 5 * 60 * 1000; // 5 minutes
+
 let _accessToken: string | null = null;
+let _tokenExpiresAt = 0;
 let _tokenStore: TokenStore | null = null;
+let _refreshPromise: Promise<string> | null = null;
+let _cachedUserId: string | null = null;
 
 function getTokenStore(): TokenStore {
   if (!_tokenStore) {
@@ -33,17 +40,38 @@ function getTokenStore(): TokenStore {
 
 /**
  * Get a valid access token, refreshing or re-authenticating as needed.
+ * Uses a mutex to prevent concurrent refresh races.
+ * Checks in-memory expiry before returning cached token.
  */
 export async function getAccessToken(): Promise<string> {
-  if (_accessToken) return _accessToken;
+  // Check in-memory token with expiry
+  if (_accessToken && Date.now() < _tokenExpiresAt - TOKEN_EXPIRY_BUFFER_MS) {
+    return _accessToken;
+  }
 
+  // Clear stale in-memory token
+  if (_accessToken && Date.now() >= _tokenExpiresAt - TOKEN_EXPIRY_BUFFER_MS) {
+    _accessToken = null;
+  }
+
+  // Mutex: if a refresh is already in-flight, wait for it
+  if (_refreshPromise) return _refreshPromise;
+
+  _refreshPromise = doGetAccessToken().finally(() => {
+    _refreshPromise = null;
+  });
+
+  return _refreshPromise;
+}
+
+async function doGetAccessToken(): Promise<string> {
   const store = getTokenStore();
   const tokens = await store.load();
 
   if (tokens) {
-    const bufferMs = 5 * 60 * 1000;
-    if (Date.now() < tokens.expiresAt - bufferMs) {
+    if (Date.now() < tokens.expiresAt - TOKEN_EXPIRY_BUFFER_MS) {
       _accessToken = tokens.accessToken;
+      _tokenExpiresAt = tokens.expiresAt;
       return _accessToken;
     }
 
@@ -54,7 +82,8 @@ export async function getAccessToken(): Promise<string> {
         clientId: config.SPOTIFY_CLIENT_ID,
         refreshToken: tokens.refreshToken,
       });
-      await saveTokenResponse(refreshed);
+      // Preserve old refresh token if new one not provided
+      await saveTokenResponse(refreshed, tokens.refreshToken);
       return _accessToken!;
     } catch {
       // Refresh failed — need full re-auth
@@ -69,60 +98,74 @@ export async function getAccessToken(): Promise<string> {
 /**
  * Make an authenticated request to the Spotify API.
  * Handles rate limiting and automatic token refresh on 401.
+ *
+ * SECURITY: Only allows paths relative to the Spotify API base URL.
+ * Absolute URLs are rejected to prevent SSRF.
  */
 export async function spotifyFetch(
   path: string,
   options: RequestInit = {}
 ): Promise<Response> {
+  // SECURITY: Reject absolute URLs to prevent SSRF
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    throw new Error("Absolute URLs are not allowed. Use relative paths (e.g., /search).");
+  }
+
   await rateLimiter.acquire();
 
   const token = await getAccessToken();
-  const url = path.startsWith("http")
-    ? path
-    : `https://api.spotify.com/v1${path}`;
+  const url = `${SPOTIFY_API_BASE}${path}`;
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
-  // Handle 429 rate limiting
-  if (response.status === 429) {
-    const retryAfter = parseInt(response.headers.get("retry-after") ?? "5", 10);
-    rateLimiter.onRateLimited(retryAfter);
-
-    // Retry once after waiting
-    await new Promise((r) => setTimeout(r, retryAfter * 1000));
-    await rateLimiter.acquire();
-    return fetch(url, {
+  const makeRequest = (bearerToken: string) =>
+    fetch(url, {
       ...options,
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${bearerToken}`,
         "Content-Type": "application/json",
         ...options.headers,
       },
     });
+
+  const response = await makeRequest(token);
+
+  // Handle 429 rate limiting
+  if (response.status === 429) {
+    const rawRetryAfter = parseInt(response.headers.get("retry-after") ?? "5", 10);
+    const retryAfter = Math.min(Math.max(rawRetryAfter, 1), MAX_RETRY_AFTER_SECONDS);
+    rateLimiter.onRateLimited(retryAfter);
+
+    await new Promise((r) => setTimeout(r, retryAfter * 1000));
+    await rateLimiter.acquire();
+    return makeRequest(token);
   }
 
   // Handle 401 — try refresh and retry once
   if (response.status === 401) {
     _accessToken = null;
+    _tokenExpiresAt = 0;
     const newToken = await getAccessToken();
-    return fetch(url, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${newToken}`,
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
+    return makeRequest(newToken);
   }
 
   return response;
+}
+
+/**
+ * Get the current user's Spotify ID. Cached after first call.
+ */
+export async function getCurrentUserId(): Promise<string> {
+  if (_cachedUserId) return _cachedUserId;
+
+  const response = await spotifyFetch("/me");
+  if (!response.ok) {
+    throw Object.assign(
+      new Error(`Failed to get user profile (HTTP ${response.status}).`),
+      { status: response.status }
+    );
+  }
+  const me = (await response.json()) as { id: string };
+  _cachedUserId = me.id;
+  return _cachedUserId;
 }
 
 /**
@@ -148,21 +191,18 @@ async function runOAuthFlow(): Promise<void> {
   // Start callback server before opening browser
   const callbackPromise = startCallbackServer(port, state);
 
-  // Open browser — dynamic import since 'open' is ESM
+  // Open browser
   const open = (await import("open")).default;
   await open(authUrl);
 
-  // Log to stderr so it doesn't interfere with MCP stdio transport
   process.stderr.write(
     "\n🎵 Spotify authorization required.\n" +
       "   A browser window should have opened.\n" +
-      "   If not, visit this URL:\n" +
-      `   ${authUrl}\n\n`
+      "   If not, check your browser.\n\n"
   );
 
   const { code, shutdown } = await callbackPromise;
 
-  // Exchange code for tokens
   const tokenResponse = await exchangeCodeForTokens({
     clientId: config.SPOTIFY_CLIENT_ID,
     code,
@@ -176,16 +216,29 @@ async function runOAuthFlow(): Promise<void> {
   process.stderr.write("✓ Spotify connected successfully.\n\n");
 }
 
-async function saveTokenResponse(response: TokenResponse): Promise<void> {
+/**
+ * Save token response. Preserves old refresh token if new one not provided.
+ */
+async function saveTokenResponse(
+  response: TokenResponse,
+  fallbackRefreshToken?: string
+): Promise<void> {
   const store = getTokenStore();
+  const refreshToken = response.refresh_token ?? fallbackRefreshToken;
+  if (!refreshToken) {
+    throw new Error("No refresh token available. Re-authorization required.");
+  }
+
+  const expiresAt = Date.now() + response.expires_in * 1000;
   const tokens: StoredTokens = {
     accessToken: response.access_token,
-    refreshToken: response.refresh_token,
-    expiresAt: Date.now() + response.expires_in * 1000,
+    refreshToken,
+    expiresAt,
     scope: response.scope,
   };
   await store.save(tokens);
   _accessToken = response.access_token;
+  _tokenExpiresAt = expiresAt;
 }
 
 /**
@@ -195,6 +248,8 @@ export async function deleteTokens(): Promise<void> {
   const store = getTokenStore();
   await store.delete();
   _accessToken = null;
+  _tokenExpiresAt = 0;
+  _cachedUserId = null;
 }
 
 /**
@@ -208,5 +263,8 @@ export async function isAuthenticated(): Promise<boolean> {
 /** Reset client state (for testing) */
 export function resetClient(): void {
   _accessToken = null;
+  _tokenExpiresAt = 0;
   _tokenStore = null;
+  _refreshPromise = null;
+  _cachedUserId = null;
 }

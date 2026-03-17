@@ -1,11 +1,16 @@
 import { z } from "zod";
+import { resolve, join } from "node:path";
 
 const configSchema = z.object({
   SPOTIFY_CLIENT_ID: z.string().min(1, "SPOTIFY_CLIENT_ID is required"),
   SPOTIFY_REDIRECT_URI: z
     .string()
     .url()
-    .default("http://localhost:8888/callback"),
+    .default("http://127.0.0.1:8888/callback")
+    .refine(
+      (url) => url.startsWith("http://127.0.0.1:") || url.startsWith("http://localhost:"),
+      "Redirect URI must use 127.0.0.1 or localhost for security"
+    ),
   TOKEN_ENCRYPTION_KEY: z
     .string()
     .length(64, "TOKEN_ENCRYPTION_KEY must be 64 hex characters (32 bytes)")
@@ -28,13 +33,16 @@ export function getConfig(): Config {
     throw new Error(`Configuration error:\n${issues}`);
   }
 
-  // Expand ~ in TOKEN_STORAGE_PATH
+  // Expand ~ in TOKEN_STORAGE_PATH using proper path joining
   if (result.data.TOKEN_STORAGE_PATH.startsWith("~")) {
-    const home = process.env.HOME || process.env.USERPROFILE || "";
-    result.data.TOKEN_STORAGE_PATH = result.data.TOKEN_STORAGE_PATH.replace(
-      "~",
-      home
-    );
+    const home = process.env.HOME || process.env.USERPROFILE;
+    if (!home) {
+      throw new Error(
+        "Cannot expand ~ in TOKEN_STORAGE_PATH: neither HOME nor USERPROFILE is set."
+      );
+    }
+    const relativePart = result.data.TOKEN_STORAGE_PATH.slice(1); // Remove ~
+    result.data.TOKEN_STORAGE_PATH = resolve(join(home, relativePart));
   }
 
   _config = result.data;

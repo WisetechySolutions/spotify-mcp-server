@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { RateLimiter } from "../../src/utils/rate-limiter.js";
 
 describe("RateLimiter", () => {
@@ -6,30 +6,65 @@ describe("RateLimiter", () => {
 
   beforeEach(() => {
     limiter = new RateLimiter();
+    vi.useFakeTimers();
   });
 
-  it("allows requests under budget", async () => {
-    const start = Date.now();
-    await limiter.acquire();
-    const elapsed = Date.now() - start;
-    expect(elapsed).toBeLessThan(50); // Should be near-instant
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("allows requests under budget immediately", async () => {
+    const promise = limiter.acquire();
+    await vi.runAllTimersAsync();
+    await promise;
+    // No error = passed
   });
 
   it("tracks multiple requests without blocking under budget", async () => {
-    const start = Date.now();
+    const promises = [];
     for (let i = 0; i < 10; i++) {
-      await limiter.acquire();
+      promises.push(limiter.acquire());
     }
-    const elapsed = Date.now() - start;
-    expect(elapsed).toBeLessThan(100);
+    await vi.runAllTimersAsync();
+    await Promise.all(promises);
   });
 
   it("pauses on rate limit", async () => {
-    limiter.onRateLimited(1); // Pause for 1 second
-    const start = Date.now();
-    await limiter.acquire();
-    const elapsed = Date.now() - start;
-    expect(elapsed).toBeGreaterThanOrEqual(900);
-    expect(elapsed).toBeLessThan(2000);
+    limiter.onRateLimited(5); // Pause for 5 seconds
+
+    let acquired = false;
+    const promise = limiter.acquire().then(() => {
+      acquired = true;
+    });
+
+    // After 4 seconds, still paused
+    await vi.advanceTimersByTimeAsync(4000);
+    expect(acquired).toBe(false);
+
+    // After 5+ seconds, should resolve
+    await vi.advanceTimersByTimeAsync(1500);
+    await promise;
+    expect(acquired).toBe(true);
+  });
+
+  it("handles zero-second pause", async () => {
+    limiter.onRateLimited(0);
+    const promise = limiter.acquire();
+    await vi.runAllTimersAsync();
+    await promise;
+  });
+
+  it("latest onRateLimited call wins", async () => {
+    limiter.onRateLimited(10);
+    limiter.onRateLimited(2); // Override with shorter pause
+
+    let acquired = false;
+    const promise = limiter.acquire().then(() => {
+      acquired = true;
+    });
+
+    await vi.advanceTimersByTimeAsync(2500);
+    await promise;
+    expect(acquired).toBe(true);
   });
 });

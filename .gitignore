@@ -4,3 +4,19 @@ dist/
 *.enc
 *.log
 .spotify-mcp/
+
+# Internal docs
+TODO.md
+WEBSITE_PLAN.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# npm pack artifacts
+*.tgz
+
+# Website
+website/node_modules/
+website/dist/
+website/.astro/

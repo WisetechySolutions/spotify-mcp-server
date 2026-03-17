@@ -66,7 +66,8 @@ export const removeTracksSchema = z.object({
   track_uris: z
     .array(z.string().regex(/^spotify:track:[a-zA-Z0-9]+$/, "Must be a Spotify track URI"))
     .min(1)
-    .describe("Array of Spotify track URIs to remove."),
+    .max(100)
+    .describe("Array of Spotify track URIs to remove. Max 100."),
 });
 
 export const getPlaylistSchema = z.object({

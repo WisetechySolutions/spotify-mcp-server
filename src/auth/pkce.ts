@@ -4,16 +4,23 @@ const VERIFIER_LENGTH = 128;
 
 /**
  * Generate a cryptographically random PKCE code verifier.
- * Uses unreserved URI characters: [A-Z] / [a-z] / [0-9] / "-" / "." / "_" / "~"
+ * Uses rejection sampling to eliminate modulo bias.
  */
 export function generateCodeVerifier(): string {
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
-  const bytes = randomBytes(VERIFIER_LENGTH);
+  const maxValid = 256 - (256 % chars.length); // Rejection threshold
   let verifier = "";
-  for (let i = 0; i < VERIFIER_LENGTH; i++) {
-    verifier += chars[bytes[i] % chars.length];
+
+  while (verifier.length < VERIFIER_LENGTH) {
+    const bytes = randomBytes(VERIFIER_LENGTH); // Over-generate to reduce loops
+    for (let i = 0; i < bytes.length && verifier.length < VERIFIER_LENGTH; i++) {
+      if (bytes[i] < maxValid) {
+        verifier += chars[bytes[i] % chars.length];
+      }
+    }
   }
+
   return verifier;
 }
 
@@ -53,6 +60,7 @@ export function buildAuthUrl(params: {
 
 /**
  * Exchange an authorization code for tokens using PKCE.
+ * Error messages are sanitized — raw Spotify responses are not leaked.
  */
 export async function exchangeCodeForTokens(params: {
   clientId: string;
@@ -75,8 +83,9 @@ export async function exchangeCodeForTokens(params: {
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Token exchange failed (${response.status}): ${text}`);
+    throw new Error(
+      `Token exchange failed (HTTP ${response.status}). Please retry authorization.`
+    );
   }
 
   return (await response.json()) as TokenResponse;
@@ -84,6 +93,7 @@ export async function exchangeCodeForTokens(params: {
 
 /**
  * Refresh an access token using a refresh token (PKCE flow).
+ * Error messages are sanitized — raw Spotify responses are not leaked.
  */
 export async function refreshAccessToken(params: {
   clientId: string;
@@ -102,8 +112,9 @@ export async function refreshAccessToken(params: {
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Token refresh failed (${response.status}): ${text}`);
+    throw new Error(
+      `Token refresh failed (HTTP ${response.status}). Re-authorization may be required.`
+    );
   }
 
   return (await response.json()) as TokenResponse;
@@ -113,7 +124,7 @@ export interface TokenResponse {
   access_token: string;
   token_type: string;
   expires_in: number;
-  refresh_token: string;
+  refresh_token?: string; // May be absent on refresh (only guaranteed on initial auth)
   scope: string;
 }
 

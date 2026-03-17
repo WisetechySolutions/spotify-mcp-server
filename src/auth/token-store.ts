@@ -31,7 +31,7 @@ export class TokenStore {
       if (isNodeError(err) && err.code === "ENOENT") {
         return null; // No token file yet
       }
-      throw new Error(`Failed to load tokens: ${(err as Error).message}`);
+      throw new Error("Failed to load tokens. The token file may be corrupted or the encryption key may have changed.");
     }
   }
 
