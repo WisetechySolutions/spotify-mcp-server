@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/spotify-mcp-server.svg?style=flat-square&color=1DB954)](https://www.npmjs.com/package/spotify-mcp-server)
 [![CI](https://github.com/WisetechySolutions/spotify-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/WisetechySolutions/spotify-mcp-server/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen?style=flat-square)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat-square)](https://www.typescriptlang.org/)
 
 <br />
@@ -43,7 +43,7 @@ Data from Spotify. Taste from Claude.
 
 ### Prerequisites
 
-- **Node.js 18+** — [Download](https://nodejs.org)
+- **Node.js 20+** — [Download](https://nodejs.org)
 - **Spotify Premium** — Required for Dev Mode API access
 - **Claude Code** or **Claude Desktop** — Where you'll use the server
 
