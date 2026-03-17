@@ -1,0 +1,69 @@
+---
+interface Props {
+  code: string;
+  lang?: string;
+  filename?: string;
+}
+
+const { code, lang = 'bash', filename } = Astro.props;
+---
+
+<div class="code-block">
+  {filename && (
+    <div class="code-header">
+      <div class="window-dots" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <span class="code-filename">{filename}</span>
+    </div>
+  )}
+  <pre><code class={`language-${lang}`} set:text={code} /></pre>
+</div>
+
+<style>
+  .code-block {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+    background: var(--bg-surface);
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1.25rem;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .window-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .window-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .window-dots span:nth-child(1) { background: #ff5f57; }
+  .window-dots span:nth-child(2) { background: #febc2e; }
+  .window-dots span:nth-child(3) { background: #28c840; }
+
+  .code-filename {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  pre {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+</style>

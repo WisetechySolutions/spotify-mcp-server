@@ -1,0 +1,136 @@
+---
+const tools = [
+  { name: 'search_tracks', description: 'Search Spotify\'s catalog with rich query syntax (track, artist, genre, year)', category: 'Search' },
+  { name: 'create_playlist', description: 'Create a new playlist with a creative name and description', category: 'Create' },
+  { name: 'add_tracks_to_playlist', description: 'Add tracks to a playlist by URI (up to 100 per call)', category: 'Modify' },
+  { name: 'remove_tracks_from_playlist', description: 'Remove tracks from a playlist by URI', category: 'Modify' },
+  { name: 'get_playlist', description: 'Get full details and track listing for a playlist', category: 'Read' },
+  { name: 'get_my_playlists', description: 'List your playlists with pagination support', category: 'Read' },
+  { name: 'disconnect_spotify', description: 'Delete all stored tokens and disconnect your account', category: 'Auth' },
+];
+
+const categoryColors: Record<string, string> = {
+  Search: '#3b82f6',
+  Create: '#1DB954',
+  Modify: '#f59e0b',
+  Read: '#8b5cf6',
+  Auth: '#ef4444',
+};
+---
+
+<section class="tools-section" id="tools">
+  <div class="container">
+    <div class="tools-header">
+      <span class="section-label">API Reference</span>
+      <h2>7 Tools, Infinite Playlists</h2>
+      <p class="tools-intro">Simple primitives that Claude composes into creative workflows.</p>
+    </div>
+    <div class="tools-grid">
+      {tools.map((tool) => (
+        <div class="tool-row">
+          <div class="tool-name">
+            <span class="tool-dot" style={`background: ${categoryColors[tool.category]}`}></span>
+            <code>{tool.name}</code>
+          </div>
+          <div class="tool-desc">{tool.description}</div>
+          <span class="tool-category" style={`color: ${categoryColors[tool.category]}; background: ${categoryColors[tool.category]}15; border-color: ${categoryColors[tool.category]}25`}>
+            {tool.category}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .tools-section {
+    padding: 6rem 0;
+  }
+
+  .tools-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .tools-header h2 {
+    margin-bottom: 0.75rem;
+  }
+
+  .tools-intro {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+  }
+
+  .tools-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .tool-row {
+    display: grid;
+    grid-template-columns: 280px 1fr auto;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--bg-card);
+    transition: all 0.2s var(--ease-out);
+  }
+
+  .tool-row:hover {
+    background: var(--bg-elevated);
+  }
+
+  .tool-name {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .tool-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .tool-name code {
+    font-size: 0.875rem;
+    background: none;
+    color: var(--text);
+    padding: 0;
+    font-weight: 500;
+  }
+
+  .tool-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .tool-category {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 768px) {
+    .tool-row {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+      padding: 1.25rem;
+    }
+
+    .tool-category {
+      justify-self: start;
+    }
+  }
+</style>

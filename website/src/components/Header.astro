@@ -1,0 +1,127 @@
+---
+const navItems = [
+  { label: 'Setup', href: '/setup' },
+  { label: 'Examples', href: '/examples' },
+  { label: 'Changelog', href: '/changelog' },
+  { label: 'GitHub', href: 'https://github.com/WisetechySolutions/spotify-mcp-server', external: true },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 10.5V21.5L23 16L12 10.5Z" fill="currentColor"/>
+        </svg>
+      </div>
+      <span class="logo-text">Spotify MCP</span>
+    </a>
+    <nav aria-label="Main navigation">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          class:list={['nav-link', { active: currentPath.startsWith(item.href) && !item.external }]}
+          {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        >
+          {item.label}
+          {item.external && (
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" class="external-icon">
+              <path d="M3.5 2H10V8.5M10 2L2 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          )}
+        </a>
+      ))}
+    </nav>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(5, 5, 5, 0.7);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text);
+    transition: all 0.2s var(--ease-out);
+  }
+
+  .logo:hover {
+    color: var(--accent);
+  }
+
+  .logo-icon {
+    display: flex;
+    color: var(--accent);
+  }
+
+  .logo-text {
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.4rem 0.85rem;
+    border-radius: 8px;
+    transition: all 0.2s var(--ease-out);
+  }
+
+  .nav-link:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .nav-link.active {
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .external-icon {
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+
+  .nav-link:hover .external-icon {
+    opacity: 1;
+  }
+
+  @media (max-width: 640px) {
+    nav { gap: 0; }
+    .nav-link {
+      font-size: 0.8rem;
+      padding: 0.35rem 0.6rem;
+    }
+  }
+</style>

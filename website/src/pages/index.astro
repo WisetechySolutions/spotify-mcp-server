@@ -1,0 +1,565 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Hero from '../components/Hero.astro';
+import FeatureCard from '../components/FeatureCard.astro';
+import ToolsTable from '../components/ToolsTable.astro';
+---
+
+<Base
+  title="Turn Claude into Your Personal DJ"
+  description="An MCP server that bridges Claude's deep music knowledge with Spotify's 100M+ track catalog. Create playlists no algorithm could imagine."
+>
+  <Header />
+  <main id="main-content">
+    <Hero />
+
+    <!-- Demo -->
+    <section class="demo">
+      <div class="container">
+        <div class="demo-header">
+          <span class="section-label">See It In Action</span>
+          <h2>One Sentence. One Playlist.</h2>
+          <p class="demo-intro">Watch Claude turn a vibe into a fully curated Spotify playlist in real time.</p>
+        </div>
+        <div class="demo-window">
+          <div class="demo-chrome">
+            <div class="window-dots" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <span class="demo-title">Claude Code</span>
+          </div>
+          <div class="demo-content">
+            <div class="demo-prompt">
+              <span class="prompt-marker">$</span>
+              <span class="prompt-text">"Make me a playlist of songs that feel like 3am in a diner — lonely but not sad, warm coffee and neon lights"</span>
+            </div>
+            <div class="demo-response">
+              <div class="demo-step"><span class="step-icon">🔍</span> Searching: "track:Fast Car artist:Tracy Chapman"</div>
+              <div class="demo-step"><span class="step-icon">🔍</span> Searching: "track:Fade Into You artist:Mazzy Star"</div>
+              <div class="demo-step"><span class="step-icon">🔍</span> Searching: "track:Pink Moon artist:Nick Drake"</div>
+              <div class="demo-step"><span class="step-icon">📝</span> Creating playlist: "3AM at the Diner"</div>
+              <div class="demo-step"><span class="step-icon">🎵</span> Adding 5 tracks to playlist...</div>
+              <div class="demo-result">
+                <span class="result-icon">✓</span>
+                <span>Playlist created: <a href="https://open.spotify.com/playlist/3oSj722cI7kYIiE3aMm4kJ" target="_blank" rel="noopener noreferrer">3AM at the Diner</a> — 5 tracks</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="glow-line" />
+
+    <!-- Problem vs Solution -->
+    <section class="comparison">
+      <div class="container">
+        <div class="comparison-header">
+          <span class="section-label">Why This Exists</span>
+          <h2>Algorithms recommend.<br /><span class="gradient-text">Claude curates.</span></h2>
+        </div>
+        <div class="comparison-grid">
+          <div class="comparison-card problem">
+            <div class="card-label">Algorithmic Recommendations</div>
+            <ul>
+              <li>Based on listening history and collaborative filtering</li>
+              <li>Can't understand thematic or literary concepts</li>
+              <li>No narrative structure or emotional arcs</li>
+              <li>Trapped in your existing taste bubble</li>
+            </ul>
+          </div>
+          <div class="vs-badge" aria-hidden="true">vs</div>
+          <div class="comparison-card solution">
+            <div class="card-label solution-label">Claude's Curation</div>
+            <ul>
+              <li>Draws on deep knowledge of music, literature, and culture</li>
+              <li>Understands metaphor, mythology, and narrative</li>
+              <li>Builds playlists with acts, climax, and resolution</li>
+              <li>Finds connections across genres, decades, and languages</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="glow-line" />
+
+    <!-- Feature Cards -->
+    <section class="features">
+      <div class="container">
+        <div class="features-header">
+          <span class="section-label">Capabilities</span>
+          <h2>What Claude Can Create</h2>
+        </div>
+        <div class="features-grid">
+          <FeatureCard
+            title="Thematic Playlists"
+            description="Claude understands concepts, metaphors, and cultural references that no search algorithm can parse."
+            example="Songs referencing Greek mythology"
+            icon="🎭"
+          />
+          <FeatureCard
+            title="Narrative Arcs"
+            description="Build playlists that tell a story — with rising action, climax, and resolution."
+            example="A road trip from hope to disillusionment to acceptance"
+            icon="📖"
+          />
+          <FeatureCard
+            title="Era Blending"
+            description="Find unexpected common ground between two musical worlds separated by decades."
+            example="Blend 1960s Motown with 2020s hyperpop"
+            icon="🔀"
+          />
+        </div>
+      </div>
+    </section>
+
+    <ToolsTable />
+
+    <hr class="glow-line" />
+
+    <!-- Quick Start -->
+    <section class="quickstart">
+      <div class="container">
+        <div class="quickstart-header">
+          <span class="section-label">Get Started</span>
+          <h2>Up and Running in 3 Steps</h2>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3>Create a Spotify App</h3>
+            <p>Get your Client ID from the <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Developer Dashboard</a>.</p>
+          </div>
+          <div class="step-connector" aria-hidden="true"></div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3>Install & Configure</h3>
+            <p>Clone the repo, set environment variables, add to Claude's MCP config.</p>
+          </div>
+          <div class="step-connector" aria-hidden="true"></div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3>Start Creating</h3>
+            <p>Ask Claude to make a playlist. It handles everything automatically.</p>
+          </div>
+        </div>
+        <div class="quickstart-cta">
+          <a href="/setup" class="btn btn-primary">
+            Full Setup Guide
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Social Proof -->
+    <section class="social-proof">
+      <div class="container">
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-value">93</div>
+            <div class="stat-label">Tests Passing</div>
+          </div>
+          <div class="stat-divider" aria-hidden="true"></div>
+          <div class="stat">
+            <div class="stat-value">7</div>
+            <div class="stat-label">MCP Tools</div>
+          </div>
+          <div class="stat-divider" aria-hidden="true"></div>
+          <div class="stat">
+            <div class="stat-value">0</div>
+            <div class="stat-label">Dependencies with Vulnerabilities</div>
+          </div>
+          <div class="stat-divider" aria-hidden="true"></div>
+          <div class="stat">
+            <div class="stat-value gradient-text">MIT</div>
+            <div class="stat-label">Open Source License</div>
+          </div>
+        </div>
+        <p class="compat">Works with <strong>Claude Code</strong> and <strong>Claude Desktop</strong> on Windows, macOS, and Linux</p>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  /* Demo */
+  .demo {
+    padding: 6rem 0;
+  }
+
+  .demo-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .demo-intro {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    margin-top: 0.75rem;
+  }
+
+  .demo-window {
+    max-width: 800px;
+    margin: 0 auto;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--bg-surface);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 80px rgba(29, 185, 84, 0.04);
+  }
+
+  .demo-chrome {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .demo-chrome .window-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .demo-chrome .window-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .demo-chrome .window-dots span:nth-child(1) { background: #ff5f57; }
+  .demo-chrome .window-dots span:nth-child(2) { background: #febc2e; }
+  .demo-chrome .window-dots span:nth-child(3) { background: #28c840; }
+
+  .demo-title {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .demo-content {
+    padding: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+
+  .demo-prompt {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .prompt-marker {
+    color: var(--accent);
+    font-weight: 700;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .prompt-text {
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  .demo-response {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .demo-step {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .step-icon {
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+  }
+
+  .demo-result {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--accent);
+    font-weight: 600;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .result-icon {
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+  }
+
+  .demo-result a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Comparison */
+  .comparison {
+    padding: 6rem 0;
+  }
+
+  .comparison-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .comparison-header h2 {
+    font-size: 2.5rem;
+  }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  .comparison-card {
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+  }
+
+  .card-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+  }
+
+  .solution-label {
+    color: var(--accent);
+  }
+
+  .comparison-card ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .comparison-card li {
+    color: var(--text-secondary);
+    font-size: 0.925rem;
+    padding-left: 1.75rem;
+    position: relative;
+    line-height: 1.5;
+  }
+
+  .problem li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5em;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: #ef4444;
+    opacity: 0.7;
+  }
+
+  .solution li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5em;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  .solution {
+    border-color: rgba(29, 185, 84, 0.2);
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(29, 185, 84, 0.03) 100%);
+  }
+
+  .vs-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Features */
+  .features {
+    padding: 6rem 0;
+  }
+
+  .features-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  /* Quick Start */
+  .quickstart {
+    padding: 6rem 0;
+  }
+
+  .quickstart-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+  }
+
+  .steps {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 3rem;
+  }
+
+  .step {
+    text-align: center;
+    max-width: 260px;
+    padding: 0 1.5rem;
+  }
+
+  .step-connector {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), var(--accent-glow), var(--border));
+    margin-top: 24px;
+    flex-shrink: 0;
+  }
+
+  .step-number {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(29, 185, 84, 0.2);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1.15rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .step h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+  }
+
+  .step p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .quickstart-cta {
+    text-align: center;
+  }
+
+  /* Social Proof */
+  .social-proof {
+    padding: 6rem 0;
+    text-align: center;
+  }
+
+  .stats-grid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .stat-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .stat-label {
+    color: var(--text-muted);
+    font-size: 0.825rem;
+    font-weight: 500;
+  }
+
+  .stat-divider {
+    width: 1px;
+    height: 48px;
+    background: var(--border);
+  }
+
+  .compat {
+    color: var(--text-muted);
+    font-size: 0.925rem;
+  }
+
+  .compat strong {
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 768px) {
+    .comparison-grid {
+      grid-template-columns: 1fr;
+    }
+    .vs-badge { display: none; }
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+    .steps {
+      flex-direction: column;
+      align-items: center;
+    }
+    .step-connector {
+      width: 1px;
+      height: 32px;
+      background: linear-gradient(180deg, var(--border), var(--accent-glow), var(--border));
+    }
+    .stat-divider { display: none; }
+    .stats-grid { gap: 2rem; }
+  }
+</style>

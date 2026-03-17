@@ -1,0 +1,99 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  example: string;
+  icon: string;
+}
+
+const { title, description, example, icon } = Astro.props;
+---
+
+<div class="feature-card">
+  <div class="card-icon">{icon}</div>
+  <h3>{title}</h3>
+  <p>{description}</p>
+  <div class="example">
+    <span class="example-label">Try:</span>
+    <em>"{example}"</em>
+  </div>
+  <div class="card-shine" aria-hidden="true"></div>
+</div>
+
+<style>
+  .feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s var(--ease-out);
+  }
+
+  .feature-card:hover {
+    border-color: rgba(29, 185, 84, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3), 0 0 60px rgba(29, 185, 84, 0.06);
+  }
+
+  .card-shine {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(29, 185, 84, 0.04) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.35s;
+    pointer-events: none;
+  }
+
+  .feature-card:hover .card-shine {
+    opacity: 1;
+  }
+
+  .card-icon {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-dim);
+    border-radius: 12px;
+    border: 1px solid rgba(29, 185, 84, 0.15);
+  }
+
+  h3 {
+    margin-bottom: 0.6rem;
+    color: var(--text);
+    font-size: 1.15rem;
+  }
+
+  p {
+    color: var(--text-muted);
+    font-size: 0.925rem;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+
+  .example {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .example-label {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .example em {
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 0.25rem;
+  }
+</style>

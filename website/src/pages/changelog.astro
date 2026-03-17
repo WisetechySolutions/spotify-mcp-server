@@ -1,0 +1,177 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const releases = [
+  {
+    version: '1.0.0',
+    date: '2026-03-15',
+    tag: 'Latest',
+    sections: [
+      {
+        title: 'Added',
+        items: [
+          'Initial release',
+          'Tools: search_tracks, create_playlist, add_tracks_to_playlist, remove_tracks_from_playlist, get_playlist, get_my_playlists, disconnect_spotify',
+          'Prompts: create_mood_playlist, create_thematic_playlist, discover_similar, create_narrative_playlist, create_era_blend',
+          'Resources: spotify-profile, spotify-auth-status',
+          'OAuth 2.0 PKCE authentication flow (no client secret needed)',
+          'AES-256-GCM encrypted token storage at rest',
+          'Adaptive rate limiting with 429/Retry-After handling',
+          'Automatic token refresh on expiry',
+          'Comprehensive error handling with user-friendly MCP error messages',
+          'Full test suite — 93 tests across 9 test files',
+          'Feb 2026 Spotify API compliance (uses /items endpoints)',
+          'Cross-platform support: Windows, macOS, Linux',
+          'CI pipeline: Node 18, 20, 22, 24 on Ubuntu, Windows, macOS',
+        ],
+      },
+    ],
+  },
+];
+---
+
+<Base
+  title="Changelog"
+  description="Release notes and version history for the Spotify MCP Server."
+>
+  <Header />
+  <main id="main-content" class="changelog-page">
+    <div class="container content">
+      <span class="section-label">Releases</span>
+      <h1>Changelog</h1>
+      <p class="intro">All notable changes to this project are documented here. This project follows <a href="https://semver.org" target="_blank" rel="noopener noreferrer">Semantic Versioning</a>.</p>
+
+      <div class="releases">
+        {releases.map((release) => (
+          <div class="release">
+            <div class="release-header">
+              <div class="release-version">
+                <h2>v{release.version}</h2>
+                {release.tag && <span class="release-tag">{release.tag}</span>}
+              </div>
+              <time class="release-date">{release.date}</time>
+            </div>
+            {release.sections.map((section) => (
+              <div class="release-section">
+                <h3>{section.title}</h3>
+                <ul>
+                  {section.items.map((item) => (
+                    <li>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .changelog-page {
+    padding: 4rem 0;
+  }
+
+  .content {
+    max-width: 780px;
+  }
+
+  .content h1 {
+    margin-bottom: 0.75rem;
+  }
+
+  .intro {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .releases {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .release {
+    padding-bottom: 3rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .release:last-child {
+    border-bottom: none;
+  }
+
+  .release-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .release-version {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .release-version h2 {
+    font-size: 1.75rem;
+    font-family: var(--font-mono);
+  }
+
+  .release-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid rgba(29, 185, 84, 0.2);
+  }
+
+  .release-date {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-family: var(--font-mono);
+  }
+
+  .release-section h3 {
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .release-section ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .release-section li {
+    color: var(--text-secondary);
+    font-size: 0.925rem;
+    line-height: 1.6;
+    padding: 0.35rem 0 0.35rem 1.5rem;
+    position: relative;
+  }
+
+  .release-section li::before {
+    content: '+';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-weight: 700;
+  }
+</style>

@@ -1,0 +1,314 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+
+<Base
+  title="Setup Guide"
+  description="Step-by-step guide to install and configure the Spotify MCP Server for Claude Code and Claude Desktop."
+>
+  <Header />
+  <main id="main-content" class="setup-page">
+    <div class="container">
+      <span class="section-label">Documentation</span>
+      <h1>Setup Guide</h1>
+      <p class="intro">Get the Spotify MCP Server running in under 5 minutes.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-header">
+            <span class="step-num">1</span>
+            <h2>Create a Spotify App</h2>
+          </div>
+          <ol>
+            <li>Go to the <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Spotify Developer Dashboard</a></li>
+            <li>Click <strong>Create App</strong></li>
+            <li>Set the Redirect URI to <code>http://127.0.0.1:8888/callback</code></li>
+            <li>Copy your <strong>Client ID</strong> (you don't need the client secret — we use PKCE)</li>
+          </ol>
+          <aside class="note">
+            <strong>Note:</strong> Spotify Premium is required for Developer Mode API access. Your app will be in Dev Mode by default, which limits you to 5 test users and 10 search results per query.
+          </aside>
+        </div>
+
+        <div class="step">
+          <div class="step-header">
+            <span class="step-num">2</span>
+            <h2>Install the Server</h2>
+          </div>
+          <h3 class="config-heading">Option A: Clone from GitHub</h3>
+          <CodeBlock code={`git clone https://github.com/WisetechySolutions/spotify-mcp-server.git
+cd spotify-mcp-server
+npm install
+npm run build`} filename="Terminal" />
+
+          <h3 class="config-heading">Option B: Install from npm</h3>
+          <CodeBlock code="npm install -g spotify-mcp-server" filename="Terminal" />
+
+          <h3 class="config-heading">Option C: Run directly with npx (no install)</h3>
+          <CodeBlock code="npx spotify-mcp-server" filename="Terminal" />
+          <aside class="note">
+            <strong>Note:</strong> npx downloads and runs the latest version on the fly. Great for trying it out. For permanent use, Option A or B is recommended.
+          </aside>
+        </div>
+
+        <div class="step">
+          <div class="step-header">
+            <span class="step-num">3</span>
+            <h2>Configure Environment</h2>
+          </div>
+          <CodeBlock code="cp .env.example .env" filename="Terminal" />
+          <p>Edit <code>.env</code> with your values:</p>
+          <CodeBlock code={`SPOTIFY_CLIENT_ID=your_client_id_here
+SPOTIFY_REDIRECT_URI=http://127.0.0.1:8888/callback
+TOKEN_ENCRYPTION_KEY=<generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))">
+TOKEN_STORAGE_PATH=~/.spotify-mcp/tokens.enc`} lang="env" filename=".env" />
+          <aside class="note">
+            <strong>Security:</strong> The <code>TOKEN_ENCRYPTION_KEY</code> is a 64-character hex string that encrypts your Spotify tokens at rest using AES-256-GCM. Keep it secret. Generate a new one for each installation.
+          </aside>
+        </div>
+
+        <div class="step">
+          <div class="step-header">
+            <span class="step-num">4</span>
+            <h2>Add to Claude</h2>
+          </div>
+
+          <h3 class="config-heading">Claude Code</h3>
+          <p>Add to your project's <code>.mcp.json</code> or global <code>~/.claude.json</code>:</p>
+          <CodeBlock code={`{
+  "mcpServers": {
+    "spotify": {
+      "command": "node",
+      "args": ["/path/to/spotify-mcp-server/dist/index.js"],
+      "env": {
+        "SPOTIFY_CLIENT_ID": "your_client_id",
+        "SPOTIFY_REDIRECT_URI": "http://127.0.0.1:8888/callback",
+        "TOKEN_ENCRYPTION_KEY": "your_64_char_hex_key",
+        "TOKEN_STORAGE_PATH": "~/.spotify-mcp/tokens.enc"
+      }
+    }
+  }
+}`} lang="json" filename=".mcp.json" />
+
+          <h3 class="config-heading">Claude Desktop</h3>
+          <p>Open <strong>Settings &rarr; Developer &rarr; Edit Config</strong> and add to <code>claude_desktop_config.json</code>:</p>
+          <CodeBlock code={`{
+  "mcpServers": {
+    "spotify": {
+      "command": "node",
+      "args": ["/absolute/path/to/spotify-mcp-server/dist/index.js"],
+      "env": {
+        "SPOTIFY_CLIENT_ID": "your_client_id",
+        "SPOTIFY_REDIRECT_URI": "http://127.0.0.1:8888/callback",
+        "TOKEN_ENCRYPTION_KEY": "your_64_char_hex_key",
+        "TOKEN_STORAGE_PATH": "/absolute/path/to/.spotify-mcp/tokens.enc"
+      }
+    }
+  }
+}`} lang="json" filename="claude_desktop_config.json" />
+          <aside class="note">
+            <strong>Tip:</strong> Claude Desktop requires absolute paths (no <code>~</code> or relative paths). On macOS this file is at <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>. On Windows: <code>%APPDATA%\Claude\claude_desktop_config.json</code>.
+          </aside>
+        </div>
+
+        <div class="step">
+          <div class="step-header">
+            <span class="step-num">5</span>
+            <h2>Authenticate & Create</h2>
+          </div>
+          <p>Start Claude and ask it to create a playlist. On first use, it will open your browser for Spotify OAuth login. After authenticating, your tokens are encrypted and stored locally — you won't need to log in again unless you explicitly disconnect.</p>
+          <CodeBlock code={`"Make me a playlist of songs that feel like 3am in a diner —
+lonely but not sad, warm coffee and neon lights"`} filename="Claude" />
+          <p>Claude will search Spotify, create the playlist, and add tracks — all automatically.</p>
+        </div>
+      </div>
+
+      <hr class="glow-line" />
+
+      <div class="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <div class="faq">
+          <details>
+            <summary>OAuth callback isn't working</summary>
+            <p>Make sure your Redirect URI in the Spotify Dashboard exactly matches <code>http://127.0.0.1:8888/callback</code> (not <code>localhost</code>). Port 8888 must be available on your machine.</p>
+          </details>
+          <details>
+            <summary>Search returns no results</summary>
+            <p>Spotify Dev Mode caps search to 10 results. Claude may need to try multiple queries with different phrasing. This is expected behavior in Dev Mode.</p>
+          </details>
+          <details>
+            <summary>Token errors after restart</summary>
+            <p>Ensure your <code>TOKEN_ENCRYPTION_KEY</code> hasn't changed. If it has, delete the token file and re-authenticate.</p>
+          </details>
+        </div>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .setup-page {
+    padding: 4rem 0;
+  }
+
+  .setup-page h1 {
+    margin-bottom: 0.75rem;
+  }
+
+  .intro {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .step {
+    padding-bottom: 3rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .step:last-child {
+    border-bottom: none;
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .step-num {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(29, 185, 84, 0.2);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .step-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .step ol {
+    padding-left: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .step li {
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .step p {
+    color: var(--text-secondary);
+    margin: 1rem 0;
+    line-height: 1.6;
+  }
+
+  .config-heading {
+    font-size: 1rem;
+    color: var(--accent);
+    margin-top: 1.75rem;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.01em;
+  }
+
+  .config-heading:first-of-type {
+    margin-top: 0;
+  }
+
+  .note {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.25rem;
+    border-radius: 0 12px 12px 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 1.25rem;
+    line-height: 1.6;
+  }
+
+  .troubleshooting {
+    padding-top: 3rem;
+  }
+
+  .troubleshooting h2 {
+    margin-bottom: 1.5rem;
+  }
+
+  .faq {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  details {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: border-color 0.2s;
+  }
+
+  details[open] {
+    border-color: rgba(29, 185, 84, 0.2);
+  }
+
+  summary {
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  summary::before {
+    content: '+';
+    color: var(--accent);
+    font-size: 1.1rem;
+    font-weight: 700;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  details[open] summary::before {
+    content: '\2212';
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details p {
+    padding: 0 1.25rem 1rem 3rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+</style>

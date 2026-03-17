@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://playmcp.dev/sitemap-index.xml

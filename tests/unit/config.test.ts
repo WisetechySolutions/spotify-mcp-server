@@ -1,0 +1,51 @@
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { getConfig, resetConfig } from "../../src/utils/config.js";
+
+describe("config", () => {
+  const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    resetConfig();
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+    resetConfig();
+  });
+
+  it("throws on missing SPOTIFY_CLIENT_ID", () => {
+    delete process.env.SPOTIFY_CLIENT_ID;
+    delete process.env.TOKEN_ENCRYPTION_KEY;
+    expect(() => getConfig()).toThrow("SPOTIFY_CLIENT_ID");
+  });
+
+  it("throws on invalid TOKEN_ENCRYPTION_KEY length", () => {
+    process.env.SPOTIFY_CLIENT_ID = "test-id";
+    process.env.TOKEN_ENCRYPTION_KEY = "tooshort";
+    expect(() => getConfig()).toThrow("64 hex characters");
+  });
+
+  it("parses valid config", () => {
+    process.env.SPOTIFY_CLIENT_ID = "test-id";
+    process.env.TOKEN_ENCRYPTION_KEY = "a".repeat(64);
+    const config = getConfig();
+    expect(config.SPOTIFY_CLIENT_ID).toBe("test-id");
+    expect(config.SPOTIFY_REDIRECT_URI).toBe("http://localhost:8888/callback");
+  });
+
+  it("expands ~ in TOKEN_STORAGE_PATH", () => {
+    process.env.SPOTIFY_CLIENT_ID = "test-id";
+    process.env.TOKEN_ENCRYPTION_KEY = "a".repeat(64);
+    process.env.TOKEN_STORAGE_PATH = "~/.spotify-mcp/tokens.enc";
+    const config = getConfig();
+    expect(config.TOKEN_STORAGE_PATH).not.toContain("~");
+  });
+
+  it("caches config on subsequent calls", () => {
+    process.env.SPOTIFY_CLIENT_ID = "test-id";
+    process.env.TOKEN_ENCRYPTION_KEY = "a".repeat(64);
+    const a = getConfig();
+    const b = getConfig();
+    expect(a).toBe(b); // Same reference
+  });
+});

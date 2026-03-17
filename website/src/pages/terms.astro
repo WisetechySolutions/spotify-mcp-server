@@ -1,0 +1,135 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Base
+  title="Terms of Service"
+  description="Terms of Service for the Spotify MCP Server and the playmcp.dev website."
+>
+  <Header />
+  <main id="main-content" class="terms-page">
+    <div class="container content">
+      <span class="section-label">Legal</span>
+      <h1>Terms of Service</h1>
+      <p class="updated">Last updated: March 16, 2026</p>
+
+      <h2>1. Acceptance of Terms</h2>
+      <p>By accessing or using the Spotify MCP Server software ("the Software") or the playmcp.dev website ("the Website"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Software or Website.</p>
+
+      <h2>2. Description of the Software</h2>
+      <p>The Software is an open-source developer tool, distributed under the MIT License, that enables Claude (an AI assistant by Anthropic) to interact with the Spotify Web API on your behalf. The Software runs locally on your machine and does not operate as a hosted service.</p>
+
+      <h2>3. Eligibility</h2>
+      <p>To use the Software, you must:</p>
+      <ul>
+        <li>Be at least 13 years of age (or the minimum age required in your jurisdiction)</li>
+        <li>Have a valid Spotify account with Premium subscription (required for Developer Mode)</li>
+        <li>Comply with Spotify's <a href="https://developer.spotify.com/terms" target="_blank" rel="noopener noreferrer">Developer Terms of Service</a></li>
+        <li>Comply with Anthropic's <a href="https://www.anthropic.com/policies/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a> for Claude</li>
+      </ul>
+
+      <h2>4. License</h2>
+      <p>The Software is licensed under the <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a>. You are free to use, modify, and distribute the Software in accordance with that license. The full license text is available in the project's <a href="https://github.com/WisetechySolutions/spotify-mcp-server/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">LICENSE</a> file.</p>
+
+      <h2>5. Your Responsibilities</h2>
+      <p>You are solely responsible for:</p>
+      <ul>
+        <li>Securing your Spotify API credentials (Client ID) and token encryption key</li>
+        <li>Any playlists created, modified, or deleted on your Spotify account through the Software</li>
+        <li>Complying with Spotify's terms regarding API usage, including Dev Mode limitations</li>
+        <li>Ensuring that your use of the Software does not violate any applicable laws or regulations</li>
+      </ul>
+
+      <h2>6. Intellectual Property</h2>
+      <p>"Spotify" is a registered trademark of Spotify AB. "Claude" is a trademark of Anthropic PBC. The Spotify MCP Server is not affiliated with, endorsed by, or associated with Spotify AB or Anthropic PBC. All third-party trademarks are the property of their respective owners.</p>
+
+      <h2>7. No Warranty</h2>
+      <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. The Software may break if Spotify changes their API, if Anthropic changes the MCP protocol, or for any other reason. We make no guarantees of availability, accuracy, or fitness for any purpose.</p>
+
+      <h2>8. Limitation of Liability</h2>
+      <p>IN NO EVENT SHALL THE AUTHORS, COPYRIGHT HOLDERS, OR CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+      <p>This includes, without limitation:</p>
+      <ul>
+        <li>Loss of data, playlists, or Spotify account access</li>
+        <li>Unauthorized access resulting from misconfigured credentials</li>
+        <li>Any actions taken by Spotify, Anthropic, or other third parties</li>
+        <li>Service interruptions caused by API changes or rate limiting</li>
+      </ul>
+
+      <h2>9. Indemnification</h2>
+      <p>You agree to indemnify and hold harmless WisetechySolutions and its contributors from any claims, damages, or expenses arising from your use of the Software, your violation of these terms, or your violation of any third-party rights.</p>
+
+      <h2>10. Third-Party Services</h2>
+      <p>The Software integrates with third-party services that have their own terms:</p>
+      <ul>
+        <li><strong>Spotify</strong> — <a href="https://developer.spotify.com/terms" target="_blank" rel="noopener noreferrer">Developer Terms</a> and <a href="https://www.spotify.com/legal/end-user-agreement/" target="_blank" rel="noopener noreferrer">User Agreement</a></li>
+        <li><strong>Anthropic</strong> — <a href="https://www.anthropic.com/policies/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a></li>
+      </ul>
+      <p>Your use of those services is governed by their respective terms. We are not responsible for the actions, content, or policies of any third-party service.</p>
+
+      <h2>11. Modifications</h2>
+      <p>We reserve the right to modify these Terms at any time. Changes will be reflected by updating the "Last updated" date at the top of this page. Continued use of the Software or Website after changes constitutes acceptance of the revised terms.</p>
+
+      <h2>12. Governing Law</h2>
+      <p>These Terms shall be governed by and construed in accordance with the laws of the United States, without regard to conflict of law provisions.</p>
+
+      <h2>13. Contact</h2>
+      <p>Questions about these terms may be directed to <a href="https://github.com/WisetechySolutions/spotify-mcp-server/issues" target="_blank" rel="noopener noreferrer">GitHub Issues</a>.</p>
+    </div>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .terms-page {
+    padding: 4rem 0;
+  }
+
+  .content {
+    max-width: 720px;
+  }
+
+  .content h1 {
+    margin-bottom: 0.5rem;
+  }
+
+  .updated {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .content h2 {
+    font-size: 1.25rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  .content p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.75;
+    font-size: 0.95rem;
+  }
+
+  .content ul {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .content li {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    line-height: 1.65;
+    font-size: 0.95rem;
+  }
+
+  .content strong {
+    color: var(--text);
+  }
+</style>
