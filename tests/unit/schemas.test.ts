@@ -71,7 +71,7 @@ describe("schemas", () => {
 
     it("accepts valid input", () => {
       const result = addTracksSchema.safeParse({
-        playlist_id: "abc123",
+        playlist_id: "0Hc07yRYtfEdsvPGXM0ZU0",
         track_uris: [validUri],
       });
       expect(result.success).toBe(true);
@@ -79,7 +79,7 @@ describe("schemas", () => {
 
     it("rejects empty track_uris", () => {
       const result = addTracksSchema.safeParse({
-        playlist_id: "abc123",
+        playlist_id: "0Hc07yRYtfEdsvPGXM0ZU0",
         track_uris: [],
       });
       expect(result.success).toBe(false);
@@ -88,7 +88,7 @@ describe("schemas", () => {
     it("rejects > 100 track URIs", () => {
       const uris = Array(101).fill(validUri);
       const result = addTracksSchema.safeParse({
-        playlist_id: "abc123",
+        playlist_id: "0Hc07yRYtfEdsvPGXM0ZU0",
         track_uris: uris,
       });
       expect(result.success).toBe(false);
@@ -96,7 +96,7 @@ describe("schemas", () => {
 
     it("rejects invalid URI format", () => {
       const result = addTracksSchema.safeParse({
-        playlist_id: "abc123",
+        playlist_id: "0Hc07yRYtfEdsvPGXM0ZU0",
         track_uris: ["not-a-spotify-uri"],
       });
       expect(result.success).toBe(false);
@@ -104,7 +104,7 @@ describe("schemas", () => {
 
     it("rejects URI with injection attempt", () => {
       const result = addTracksSchema.safeParse({
-        playlist_id: "abc123",
+        playlist_id: "0Hc07yRYtfEdsvPGXM0ZU0",
         track_uris: ["spotify:track:abc\n../../etc"],
       });
       expect(result.success).toBe(false);
@@ -112,7 +112,7 @@ describe("schemas", () => {
 
     it("rejects URI with special characters", () => {
       const result = addTracksSchema.safeParse({
-        playlist_id: "abc123",
+        playlist_id: "0Hc07yRYtfEdsvPGXM0ZU0",
         track_uris: ["spotify:track:abc<script>"],
       });
       expect(result.success).toBe(false);
@@ -120,7 +120,7 @@ describe("schemas", () => {
 
     it("accepts optional position", () => {
       const result = addTracksSchema.parse({
-        playlist_id: "abc123",
+        playlist_id: "0Hc07yRYtfEdsvPGXM0ZU0",
         track_uris: [validUri],
         position: 0,
       });
@@ -129,7 +129,7 @@ describe("schemas", () => {
 
     it("rejects negative position", () => {
       const result = addTracksSchema.safeParse({
-        playlist_id: "abc123",
+        playlist_id: "0Hc07yRYtfEdsvPGXM0ZU0",
         track_uris: [validUri],
         position: -1,
       });
@@ -140,7 +140,7 @@ describe("schemas", () => {
   describe("removeTracksSchema", () => {
     it("accepts valid input", () => {
       const result = removeTracksSchema.safeParse({
-        playlist_id: "abc",
+        playlist_id: "3EYdOzTlNxPufaqYD0KvzA",
         track_uris: ["spotify:track:abc123"],
       });
       expect(result.success).toBe(true);
@@ -148,7 +148,7 @@ describe("schemas", () => {
 
     it("rejects empty URIs", () => {
       const result = removeTracksSchema.safeParse({
-        playlist_id: "abc",
+        playlist_id: "3EYdOzTlNxPufaqYD0KvzA",
         track_uris: [],
       });
       expect(result.success).toBe(false);
@@ -157,12 +157,22 @@ describe("schemas", () => {
 
   describe("getPlaylistSchema", () => {
     it("accepts valid playlist_id", () => {
-      const result = getPlaylistSchema.safeParse({ playlist_id: "abc123" });
+      const result = getPlaylistSchema.safeParse({ playlist_id: "0Hc07yRYtfEdsvPGXM0ZU0" });
       expect(result.success).toBe(true);
     });
 
     it("rejects empty playlist_id", () => {
       const result = getPlaylistSchema.safeParse({ playlist_id: "" });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects short playlist_id", () => {
+      const result = getPlaylistSchema.safeParse({ playlist_id: "abc123" });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects playlist_id with special chars", () => {
+      const result = getPlaylistSchema.safeParse({ playlist_id: "0Hc07yRY<script>XM0Z" });
       expect(result.success).toBe(false);
     });
   });

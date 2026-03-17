@@ -43,7 +43,7 @@ export const createPlaylistSchema = z.object({
 export const addTracksSchema = z.object({
   playlist_id: z
     .string()
-    .min(1)
+    .regex(/^[a-zA-Z0-9]{22}$/, "Must be a valid 22-character Spotify playlist ID")
     .describe("Spotify playlist ID."),
   track_uris: z
     .array(z.string().regex(/^spotify:track:[a-zA-Z0-9]+$/, "Must be a Spotify track URI"))
@@ -61,7 +61,7 @@ export const addTracksSchema = z.object({
 export const removeTracksSchema = z.object({
   playlist_id: z
     .string()
-    .min(1)
+    .regex(/^[a-zA-Z0-9]{22}$/, "Must be a valid 22-character Spotify playlist ID")
     .describe("Spotify playlist ID."),
   track_uris: z
     .array(z.string().regex(/^spotify:track:[a-zA-Z0-9]+$/, "Must be a Spotify track URI"))
@@ -73,7 +73,7 @@ export const removeTracksSchema = z.object({
 export const getPlaylistSchema = z.object({
   playlist_id: z
     .string()
-    .min(1)
+    .regex(/^[a-zA-Z0-9]{22}$/, "Must be a valid 22-character Spotify playlist ID")
     .describe("Spotify playlist ID."),
 });
 
