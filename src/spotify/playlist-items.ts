@@ -5,6 +5,9 @@ import { spotifyFetch } from "./client.js";
  *
  * IMPORTANT: Uses /playlists/{id}/items (not /tracks — renamed Feb 2026).
  * Max 100 URIs per request.
+ *
+ * Security: Playlist ID is URI-encoded. Response structure validated.
+ * Error messages never expose raw Spotify API details.
  */
 export async function addTracksToPlaylist(params: {
   playlistId: string;
@@ -41,6 +44,15 @@ export async function addTracksToPlaylist(params: {
   }
 
   const data = (await response.json()) as { snapshot_id: string };
+
+  // Validate response structure
+  if (!data || typeof data !== "object" || typeof data.snapshot_id !== "string") {
+    throw Object.assign(
+      new Error("Spotify returned an invalid response when adding tracks."),
+      { status: 502 }
+    );
+  }
+
   return { snapshotId: data.snapshot_id };
 }
 
@@ -48,6 +60,8 @@ export async function addTracksToPlaylist(params: {
  * Remove tracks from a playlist.
  *
  * IMPORTANT: Uses DELETE /playlists/{id}/items (not /tracks — renamed Feb 2026).
+ *
+ * Security: Playlist ID is URI-encoded. Response structure validated.
  */
 export async function removeTracksFromPlaylist(params: {
   playlistId: string;
@@ -75,6 +89,15 @@ export async function removeTracksFromPlaylist(params: {
   }
 
   const data = (await response.json()) as { snapshot_id: string };
+
+  // Validate response structure
+  if (!data || typeof data !== "object" || typeof data.snapshot_id !== "string") {
+    throw Object.assign(
+      new Error("Spotify returned an invalid response when removing tracks."),
+      { status: 502 }
+    );
+  }
+
   return { snapshotId: data.snapshot_id };
 }
 

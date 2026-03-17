@@ -1,8 +1,16 @@
 import { z } from "zod";
-import { resolve, join } from "node:path";
+import { resolve, join, normalize } from "node:path";
+
+const SPOTIFY_CLIENT_ID_PATTERN = /^[0-9a-fA-F]{32}$/;
 
 const configSchema = z.object({
-  SPOTIFY_CLIENT_ID: z.string().min(1, "SPOTIFY_CLIENT_ID is required"),
+  SPOTIFY_CLIENT_ID: z
+    .string()
+    .min(1, "SPOTIFY_CLIENT_ID is required")
+    .refine(
+      (id) => SPOTIFY_CLIENT_ID_PATTERN.test(id),
+      "SPOTIFY_CLIENT_ID must be a 32-character hex string"
+    ),
   SPOTIFY_REDIRECT_URI: z
     .string()
     .url()
@@ -34,8 +42,8 @@ export function getConfig(): Config {
   }
 
   // Expand ~ in TOKEN_STORAGE_PATH using proper path joining
+  const home = process.env.HOME || process.env.USERPROFILE;
   if (result.data.TOKEN_STORAGE_PATH.startsWith("~")) {
-    const home = process.env.HOME || process.env.USERPROFILE;
     if (!home) {
       throw new Error(
         "Cannot expand ~ in TOKEN_STORAGE_PATH: neither HOME nor USERPROFILE is set."
@@ -45,7 +53,19 @@ export function getConfig(): Config {
     result.data.TOKEN_STORAGE_PATH = resolve(join(home, relativePart));
   }
 
-  _config = result.data;
+  // SECURITY: Validate TOKEN_STORAGE_PATH doesn't traverse outside home directory
+  if (home) {
+    const normalizedPath = normalize(result.data.TOKEN_STORAGE_PATH);
+    const normalizedHome = normalize(home);
+    if (!normalizedPath.startsWith(normalizedHome)) {
+      throw new Error(
+        "TOKEN_STORAGE_PATH must be within the user's home directory for security."
+      );
+    }
+  }
+
+  // Freeze config to prevent runtime mutation
+  _config = Object.freeze({ ...result.data }) as Config;
   return _config;
 }
 

@@ -88,7 +88,8 @@ export async function exchangeCodeForTokens(params: {
     );
   }
 
-  return (await response.json()) as TokenResponse;
+  const data: unknown = await response.json();
+  return validateTokenResponse(data, "Token exchange");
 }
 
 /**
@@ -117,7 +118,8 @@ export async function refreshAccessToken(params: {
     );
   }
 
-  return (await response.json()) as TokenResponse;
+  const data: unknown = await response.json();
+  return validateTokenResponse(data, "Token refresh");
 }
 
 export interface TokenResponse {
@@ -126,6 +128,42 @@ export interface TokenResponse {
   expires_in: number;
   refresh_token?: string; // May be absent on refresh (only guaranteed on initial auth)
   scope: string;
+}
+
+/**
+ * Validate the shape of a token response from Spotify.
+ * Prevents trusting raw API responses without structural verification.
+ */
+function validateTokenResponse(data: unknown, context: string): TokenResponse {
+  if (typeof data !== "object" || data === null || Array.isArray(data)) {
+    throw new Error(`${context} returned invalid response structure`);
+  }
+
+  const obj = data as Record<string, unknown>;
+
+  if (typeof obj.access_token !== "string" || obj.access_token.length === 0) {
+    throw new Error(`${context} response missing valid access_token`);
+  }
+  if (typeof obj.token_type !== "string") {
+    throw new Error(`${context} response missing valid token_type`);
+  }
+  if (typeof obj.expires_in !== "number" || !Number.isFinite(obj.expires_in) || obj.expires_in <= 0) {
+    throw new Error(`${context} response has invalid expires_in`);
+  }
+  if (obj.refresh_token !== undefined && typeof obj.refresh_token !== "string") {
+    throw new Error(`${context} response has invalid refresh_token`);
+  }
+  if (typeof obj.scope !== "string") {
+    throw new Error(`${context} response missing valid scope`);
+  }
+
+  return {
+    access_token: obj.access_token,
+    token_type: obj.token_type,
+    expires_in: obj.expires_in,
+    refresh_token: obj.refresh_token as string | undefined,
+    scope: obj.scope,
+  };
 }
 
 /**

@@ -345,13 +345,52 @@ const playlists = [
     margin-bottom: 1.5rem;
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
+    .examples-page { padding: 3rem 0; }
+    .intro { font-size: 0.95rem; margin-bottom: 2rem; padding-bottom: 1.5rem; }
+    .gallery { gap: 1rem; }
+    .playlist-card {
+      padding: 1.25rem;
+      border-radius: 12px;
+    }
+    /* Disable hover transform on touch — prevents bobbing */
+    .playlist-card:hover {
+      transform: none;
+      box-shadow: none;
+    }
     .playlist-header {
       flex-direction: column;
+      gap: 0.5rem;
     }
+    .playlist-header h2 { font-size: 1.2rem; }
+    .playlist-number { font-size: 0.65rem; }
     .header-right {
-      flex-direction: row-reverse;
-      justify-content: flex-end;
+      gap: 0.5rem;
     }
+    .track-count { font-size: 0.7rem; }
+    .tags { gap: 0.3rem; }
+    .tag { font-size: 0.6rem; padding: 0.15rem 0.5rem; }
+    .spotify-link { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
+    blockquote { font-size: 0.9rem; padding-left: 0.75rem; margin-bottom: 1rem; }
+    .track-list { padding: 1rem; border-radius: 10px; }
+    .track-list li { font-size: 0.8rem; flex-wrap: wrap; }
+    .track-artist { font-size: 0.8rem; }
+    .track-name { font-size: 0.8rem; }
+    .cta-block { padding: 2.5rem 0 1rem; }
+    .cta-block h2 { font-size: 1.3rem; }
+    .cta-block p { font-size: 0.9rem; }
+  }
+
+  @media (max-width: 480px) {
+    .playlist-card { padding: 1rem; }
+    .playlist-header h2 { font-size: 1.1rem; }
+    blockquote { font-size: 0.85rem; }
+    .track-list li {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+    }
+    .track-sep { display: none; }
+    .track-name { color: var(--text-muted); font-size: 0.75rem; }
   }
 </style>

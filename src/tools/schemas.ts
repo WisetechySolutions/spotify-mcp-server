@@ -3,15 +3,26 @@ import { z } from "zod";
 /**
  * Zod schemas for all MCP tool inputs.
  * These define what Claude sends when it calls each tool.
+ *
+ * Security: All string inputs reject null bytes and control characters.
  */
 
+/** Reject null bytes and control characters in strings (defense-in-depth) */
+const safeString = (schema: z.ZodString) =>
+  schema.refine(
+    (s) => !/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(s),
+    "Input contains invalid control characters"
+  );
+
 export const searchTracksSchema = z.object({
-  query: z
-    .string()
-    .min(1)
-    .describe(
-      "Search query. Supports Spotify syntax: 'track:Name artist:Artist', 'genre:rock year:2020-2025', or plain text."
-    ),
+  query: safeString(
+    z
+      .string()
+      .min(1)
+      .max(500)
+  ).describe(
+    "Search query (max 500 chars). Supports Spotify syntax: 'track:Name artist:Artist', 'genre:rock year:2020-2025', or plain text."
+  ),
   limit: z
     .number()
     .int()
@@ -23,16 +34,19 @@ export const searchTracksSchema = z.object({
 });
 
 export const createPlaylistSchema = z.object({
-  name: z
-    .string()
-    .min(1)
-    .max(100)
-    .describe("Playlist name. Be creative — this is the first thing people see."),
-  description: z
-    .string()
-    .max(300)
+  name: safeString(
+    z
+      .string()
+      .min(1)
+      .max(100)
+  ).describe("Playlist name (max 100 chars). Be creative — this is the first thing people see."),
+  description: safeString(
+    z
+      .string()
+      .max(300)
+  )
     .optional()
-    .describe("Playlist description. Explain the theme, vibe, or story."),
+    .describe("Playlist description (max 300 chars). Explain the theme, vibe, or story."),
   public: z
     .boolean()
     .optional()
@@ -41,12 +55,17 @@ export const createPlaylistSchema = z.object({
 });
 
 export const addTracksSchema = z.object({
-  playlist_id: z
-    .string()
-    .regex(/^[a-zA-Z0-9]{22}$/, "Must be a valid 22-character Spotify playlist ID")
-    .describe("Spotify playlist ID."),
+  playlist_id: safeString(
+    z
+      .string()
+      .regex(/^[a-zA-Z0-9]{22}$/, "Must be a valid 22-character Spotify playlist ID")
+  ).describe("Spotify playlist ID."),
   track_uris: z
-    .array(z.string().regex(/^spotify:track:[a-zA-Z0-9]+$/, "Must be a Spotify track URI"))
+    .array(
+      safeString(
+        z.string().regex(/^spotify:track:[a-zA-Z0-9]+$/, "Must be a Spotify track URI")
+      )
+    )
     .min(1)
     .max(100)
     .describe("Array of Spotify track URIs (e.g., 'spotify:track:6rqhFgbbKwnb9MLmUQDhG6'). Max 100."),
@@ -59,22 +78,28 @@ export const addTracksSchema = z.object({
 });
 
 export const removeTracksSchema = z.object({
-  playlist_id: z
-    .string()
-    .regex(/^[a-zA-Z0-9]{22}$/, "Must be a valid 22-character Spotify playlist ID")
-    .describe("Spotify playlist ID."),
+  playlist_id: safeString(
+    z
+      .string()
+      .regex(/^[a-zA-Z0-9]{22}$/, "Must be a valid 22-character Spotify playlist ID")
+  ).describe("Spotify playlist ID."),
   track_uris: z
-    .array(z.string().regex(/^spotify:track:[a-zA-Z0-9]+$/, "Must be a Spotify track URI"))
+    .array(
+      safeString(
+        z.string().regex(/^spotify:track:[a-zA-Z0-9]+$/, "Must be a Spotify track URI")
+      )
+    )
     .min(1)
     .max(100)
     .describe("Array of Spotify track URIs to remove. Max 100."),
 });
 
 export const getPlaylistSchema = z.object({
-  playlist_id: z
-    .string()
-    .regex(/^[a-zA-Z0-9]{22}$/, "Must be a valid 22-character Spotify playlist ID")
-    .describe("Spotify playlist ID."),
+  playlist_id: safeString(
+    z
+      .string()
+      .regex(/^[a-zA-Z0-9]{22}$/, "Must be a valid 22-character Spotify playlist ID")
+  ).describe("Spotify playlist ID."),
 });
 
 export const getMyPlaylistsSchema = z.object({

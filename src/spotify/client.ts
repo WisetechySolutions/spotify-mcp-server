@@ -23,6 +23,9 @@ const SCOPES = [
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 const MAX_RETRY_AFTER_SECONDS = 60;
 const TOKEN_EXPIRY_BUFFER_MS = 5 * 60 * 1000; // 5 minutes
+const MAX_RESPONSE_SIZE = 1_048_576; // 1MB max response size
+const REQUEST_TIMEOUT_MS = 10_000; // 10 second request timeout
+const ALLOWED_API_HOSTS = new Set(["api.spotify.com", "accounts.spotify.com"]);
 
 let _accessToken: string | null = null;
 let _tokenExpiresAt = 0;
@@ -99,8 +102,13 @@ async function doGetAccessToken(): Promise<string> {
  * Make an authenticated request to the Spotify API.
  * Handles rate limiting and automatic token refresh on 401.
  *
- * SECURITY: Only allows paths relative to the Spotify API base URL.
- * Absolute URLs are rejected to prevent SSRF.
+ * SECURITY:
+ * - Only allows paths relative to the Spotify API base URL (anti-SSRF)
+ * - Validates final URL resolves to allowed Spotify hosts only
+ * - Enforces response size limit (1MB)
+ * - Enforces request timeout (10s)
+ * - Validates response Content-Type before JSON parsing
+ * - Never leaks tokens in error messages
  */
 export async function spotifyFetch(
   path: string,
@@ -111,20 +119,52 @@ export async function spotifyFetch(
     throw new Error("Absolute URLs are not allowed. Use relative paths (e.g., /search).");
   }
 
+  // SECURITY: Validate the constructed URL resolves to an allowed host
+  const url = `${SPOTIFY_API_BASE}${path}`;
+  const parsedUrl = new URL(url);
+  if (!ALLOWED_API_HOSTS.has(parsedUrl.hostname)) {
+    throw new Error("Request URL resolved to a disallowed host.");
+  }
+
   await rateLimiter.acquire();
 
   const token = await getAccessToken();
-  const url = `${SPOTIFY_API_BASE}${path}`;
 
-  const makeRequest = (bearerToken: string) =>
-    fetch(url, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${bearerToken}`,
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
+  const makeRequest = async (bearerToken: string): Promise<Response> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          Authorization: `Bearer ${bearerToken}`,
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+      });
+
+      // SECURITY: Enforce response size limit
+      const contentLength = response.headers.get("content-length");
+      if (contentLength && parseInt(contentLength, 10) > MAX_RESPONSE_SIZE) {
+        throw new Error("Spotify API response exceeds maximum allowed size (1MB).");
+      }
+
+      return response;
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        throw new Error("Spotify API request timed out (10s limit).");
+      }
+      // SECURITY: Never leak tokens in error messages
+      if (err instanceof Error && err.message.includes(bearerToken)) {
+        throw new Error("Spotify API request failed.");
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
 
   const response = await makeRequest(token);
 
@@ -148,6 +188,37 @@ export async function spotifyFetch(
   }
 
   return response;
+}
+
+/**
+ * Safely parse a JSON response from Spotify, validating Content-Type.
+ * Use this instead of raw response.json() for defense-in-depth.
+ *
+ * SECURITY: Validates Content-Type header contains application/json
+ * and enforces response body size limit.
+ */
+export async function safeParseJsonResponse(response: Response): Promise<unknown> {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(`Unexpected Content-Type from Spotify API: ${contentType.slice(0, 100)}`);
+  }
+
+  // Read body as text first to enforce size limit
+  const text = await response.text();
+  if (text.length > MAX_RESPONSE_SIZE) {
+    throw new Error("Spotify API response body exceeds maximum allowed size (1MB).");
+  }
+
+  return JSON.parse(text);
+}
+
+/**
+ * Sanitize user input for use in API query parameters.
+ * Removes null bytes and control characters that could cause issues.
+ */
+export function sanitizeQueryParam(input: string): string {
+  // Remove null bytes and control characters (except space, which is valid in search queries)
+  return input.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, "");
 }
 
 /**

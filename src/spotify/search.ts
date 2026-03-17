@@ -1,4 +1,4 @@
-import { spotifyFetch } from "./client.js";
+import { spotifyFetch, sanitizeQueryParam } from "./client.js";
 
 export interface TrackResult {
   uri: string;
@@ -24,6 +24,9 @@ export interface SearchResult {
  * The query supports Spotify search syntax:
  *   - "track:Song Name artist:Artist Name"
  *   - "genre:rock year:2020-2025"
+ *
+ * Security: Query is sanitized before use in API parameters.
+ * Response structure is validated before accessing properties.
  */
 export async function searchTracks(params: {
   query: string;
@@ -31,8 +34,11 @@ export async function searchTracks(params: {
 }): Promise<SearchResult> {
   const limit = Math.min(params.limit ?? 10, 10); // Dev Mode cap: 10
 
+  // Sanitize user input before using in query parameters
+  const sanitizedQuery = sanitizeQueryParam(params.query);
+
   const searchParams = new URLSearchParams({
-    q: params.query,
+    q: sanitizedQuery,
     type: "track",
     limit: limit.toString(),
   });
@@ -40,6 +46,7 @@ export async function searchTracks(params: {
   const response = await spotifyFetch(`/search?${searchParams.toString()}`);
 
   if (!response.ok) {
+    // Never pass raw Spotify error details to the user
     throw Object.assign(new Error(`Search failed (HTTP ${response.status}).`), {
       status: response.status,
     });
@@ -47,21 +54,37 @@ export async function searchTracks(params: {
 
   const data = (await response.json()) as SpotifySearchResponse;
 
-  const tracks: TrackResult[] = (data.tracks?.items ?? []).map((item) => ({
-    uri: item.uri,
-    name: item.name,
-    artists: item.artists.map((a) => a.name),
-    album: item.album.name,
-    releaseDate: item.album.release_date,
-    durationMs: item.duration_ms,
-    previewUrl: item.preview_url,
-    externalUrl: item.external_urls?.spotify ?? "",
-  }));
+  // Validate response structure before accessing properties
+  if (data && typeof data === "object" && data.tracks && Array.isArray(data.tracks.items)) {
+    const tracks: TrackResult[] = data.tracks.items
+      .filter((item): item is SpotifyTrackObject =>
+        item != null && typeof item === "object" && typeof item.uri === "string"
+      )
+      .map((item) => ({
+        uri: String(item.uri ?? ""),
+        name: String(item.name ?? ""),
+        artists: Array.isArray(item.artists)
+          ? item.artists.map((a) => String(a?.name ?? ""))
+          : [],
+        album: String(item.album?.name ?? ""),
+        releaseDate: String(item.album?.release_date ?? ""),
+        durationMs: typeof item.duration_ms === "number" ? item.duration_ms : 0,
+        previewUrl: typeof item.preview_url === "string" ? item.preview_url : null,
+        externalUrl: String(item.external_urls?.spotify ?? ""),
+      }));
 
+    return {
+      tracks,
+      query: params.query,
+      total: typeof data.tracks.total === "number" ? data.tracks.total : 0,
+    };
+  }
+
+  // Response didn't match expected structure — return empty results safely
   return {
-    tracks,
+    tracks: [],
     query: params.query,
-    total: data.tracks?.total ?? 0,
+    total: 0,
   };
 }
 

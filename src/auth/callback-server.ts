@@ -1,6 +1,10 @@
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from "node:http";
 
 const TIMEOUT_MS = 120_000; // Auto-shutdown after 2 minutes
+const MAX_REQUEST_SIZE = 4096; // 4KB max request size
+const REQUEST_TIMEOUT_MS = 5_000; // 5s timeout per request (anti-slowloris)
+const MAX_CALLBACK_REQUESTS = 5; // Rate limit: max requests before forced shutdown
+const CODE_PATTERN = /^[a-zA-Z0-9_-]{1,512}$/; // OAuth codes are alphanumeric, reasonable length
 
 const SECURITY_HEADERS: Record<string, string> = {
   "Content-Type": "text/html; charset=utf-8",
@@ -14,15 +18,27 @@ const SECURITY_HEADERS: Record<string, string> = {
  * Ephemeral localhost HTTP server that catches the OAuth redirect.
  * Binds to 127.0.0.1 only (not 0.0.0.0) for security.
  * Auto-shuts down after receiving the callback or after timeout.
+ *
+ * Security hardening:
+ * - Request size limit (4KB) to reject oversized payloads
+ * - Per-request timeout (5s) to prevent slowloris attacks
+ * - Rate limiting (max 5 requests) before forced shutdown
+ * - OAuth code format validation
  */
 export function startCallbackServer(
   port: number,
   expectedState: string
 ): Promise<{ code: string; shutdown: () => Promise<void> }> {
+  // Validate port is a reasonable number
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    return Promise.reject(new Error("Invalid port number"));
+  }
+
   return new Promise((resolve, reject) => {
     let server: Server;
     let timeoutId: ReturnType<typeof setTimeout>;
     let settled = false;
+    let requestCount = 0;
 
     const shutdown = (): Promise<void> =>
       new Promise((res) => {
@@ -45,7 +61,42 @@ export function startCallbackServer(
     };
 
     server = createServer((req: IncomingMessage, res: ServerResponse) => {
-      const url = new URL(req.url ?? "/", `http://127.0.0.1:${port}`);
+      // Rate limiting: reject after too many requests
+      requestCount++;
+      if (requestCount > MAX_CALLBACK_REQUESTS) {
+        res.writeHead(429, SECURITY_HEADERS);
+        res.end(errorPage("Too many requests. Server shutting down."));
+        settle("reject", new Error("Callback server rate limit exceeded"));
+        return;
+      }
+
+      // Per-request timeout to prevent slowloris
+      req.setTimeout(REQUEST_TIMEOUT_MS, () => {
+        res.writeHead(408, SECURITY_HEADERS);
+        res.end(errorPage("Request timeout."));
+        req.destroy();
+      });
+
+      // Enforce request size limit
+      let dataSize = 0;
+      req.on("data", (chunk: Buffer) => {
+        dataSize += chunk.length;
+        if (dataSize > MAX_REQUEST_SIZE) {
+          res.writeHead(413, SECURITY_HEADERS);
+          res.end(errorPage("Request too large."));
+          req.destroy();
+        }
+      });
+
+      // Validate URL length before parsing (the URL is in the request line)
+      const rawUrl = req.url ?? "/";
+      if (rawUrl.length > MAX_REQUEST_SIZE) {
+        res.writeHead(414, SECURITY_HEADERS);
+        res.end(errorPage("URI too long."));
+        return;
+      }
+
+      const url = new URL(rawUrl, `http://127.0.0.1:${port}`);
 
       if (url.pathname !== "/callback") {
         res.writeHead(404, SECURITY_HEADERS);
@@ -59,8 +110,12 @@ export function startCallbackServer(
 
       if (error) {
         res.writeHead(400, SECURITY_HEADERS);
-        res.end(errorPage(error));
-        settle("reject", new Error(`Spotify authorization denied: ${error}`));
+        // Only show a sanitized version of the error — don't reflect raw input verbatim
+        const safeError = typeof error === "string" && error.length < 200
+          ? error.replace(/[^a-zA-Z0-9_\- ]/g, "")
+          : "authorization_error";
+        res.end(errorPage(safeError));
+        settle("reject", new Error(`Spotify authorization denied: ${safeError}`));
         return;
       }
 
@@ -71,12 +126,28 @@ export function startCallbackServer(
         return;
       }
 
+      // Validate OAuth code format
+      if (!CODE_PATTERN.test(code)) {
+        res.writeHead(400, SECURITY_HEADERS);
+        res.end(errorPage("Invalid authorization code format."));
+        settle("reject", new Error("Invalid OAuth callback: malformed authorization code"));
+        return;
+      }
+
       res.writeHead(200, SECURITY_HEADERS);
       res.end(successPage());
       settle("resolve", { code, shutdown });
     });
 
+    // Ensure server ONLY listens on configured port on loopback
     server.listen(port, "127.0.0.1", () => {
+      // Verify the server is actually on the expected port
+      const addr = server.address();
+      if (addr && typeof addr === "object" && addr.port !== port) {
+        settle("reject", new Error(`Server bound to unexpected port ${addr.port}`));
+        return;
+      }
+
       timeoutId = setTimeout(() => {
         settle("reject", new Error("OAuth callback timed out after 2 minutes."));
       }, TIMEOUT_MS);

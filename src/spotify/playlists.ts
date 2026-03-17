@@ -1,4 +1,4 @@
-import { spotifyFetch } from "./client.js";
+import { spotifyFetch, sanitizeQueryParam } from "./client.js";
 
 export interface PlaylistSummary {
   id: string;
@@ -26,6 +26,9 @@ export interface PlaylistTrack {
 
 /**
  * Get the current user's playlists.
+ *
+ * Security: Response structure validated before accessing properties.
+ * Error messages never expose raw Spotify API details.
  */
 export async function getMyPlaylists(params?: {
   limit?: number;
@@ -45,14 +48,23 @@ export async function getMyPlaylists(params?: {
 
   const data = (await response.json()) as SpotifyPaginatedPlaylists;
 
+  // Validate response structure
+  if (!data || typeof data !== "object" || !Array.isArray(data.items)) {
+    return { playlists: [], total: 0 };
+  }
+
   return {
-    playlists: data.items.map(mapPlaylistSummary),
-    total: data.total,
+    playlists: data.items
+      .filter((item): item is SpotifyPlaylistObject => item != null && typeof item === "object" && typeof item.id === "string")
+      .map(mapPlaylistSummary),
+    total: typeof data.total === "number" ? data.total : 0,
   };
 }
 
 /**
  * Get a single playlist by ID, including its tracks.
+ *
+ * Security: Playlist ID is URI-encoded. Response structure validated.
  */
 export async function getPlaylist(playlistId: string): Promise<PlaylistDetail> {
   const response = await spotifyFetch(`/playlists/${encodeURIComponent(playlistId)}`);
@@ -64,34 +76,51 @@ export async function getPlaylist(playlistId: string): Promise<PlaylistDetail> {
 
   const data = (await response.json()) as SpotifyFullPlaylist;
 
+  // Validate response structure
+  if (!data || typeof data !== "object" || typeof data.id !== "string") {
+    throw Object.assign(new Error("Spotify returned an invalid playlist response."), {
+      status: 502,
+    });
+  }
+
   return {
     ...mapPlaylistSummary(data),
-    tracks: (data.tracks?.items ?? []).map((item) => ({
-      uri: item.track?.uri ?? "",
-      name: item.track?.name ?? "",
-      artists: (item.track?.artists ?? []).map((a) => a.name),
-      album: item.track?.album?.name ?? "",
-      addedAt: item.added_at ?? "",
-      durationMs: item.track?.duration_ms ?? 0,
-    })),
-    owner: data.owner?.display_name ?? "",
+    tracks: (Array.isArray(data.tracks?.items) ? data.tracks!.items : [])
+      .filter((item): item is SpotifyPlaylistTrackItem => item != null && typeof item === "object")
+      .map((item) => ({
+        uri: String(item.track?.uri ?? ""),
+        name: String(item.track?.name ?? ""),
+        artists: Array.isArray(item.track?.artists)
+          ? item.track!.artists.map((a) => String(a?.name ?? ""))
+          : [],
+        album: String(item.track?.album?.name ?? ""),
+        addedAt: String(item.added_at ?? ""),
+        durationMs: typeof item.track?.duration_ms === "number" ? item.track.duration_ms : 0,
+      })),
+    owner: String(data.owner?.display_name ?? ""),
   };
 }
 
 /**
  * Create a new playlist for the current user.
+ *
+ * Security: User-provided name/description are sanitized before sending.
  */
 export async function createPlaylist(params: {
   name: string;
   description?: string;
   public?: boolean;
 }): Promise<PlaylistSummary> {
+  // Sanitize user-provided text values
+  const sanitizedName = sanitizeQueryParam(params.name);
+  const sanitizedDescription = sanitizeQueryParam(params.description ?? "");
+
   // Use /me/playlists — /users/{id}/playlists returns 403 in Dev Mode (Feb 2026)
   const response = await spotifyFetch("/me/playlists", {
     method: "POST",
     body: JSON.stringify({
-      name: params.name,
-      description: params.description ?? "",
+      name: sanitizedName,
+      description: sanitizedDescription,
       public: params.public ?? false,
     }),
   });
@@ -103,18 +132,26 @@ export async function createPlaylist(params: {
   }
 
   const data = (await response.json()) as SpotifyPlaylistObject;
+
+  // Validate response structure
+  if (!data || typeof data !== "object" || typeof data.id !== "string") {
+    throw Object.assign(new Error("Spotify returned an invalid playlist response."), {
+      status: 502,
+    });
+  }
+
   return mapPlaylistSummary(data);
 }
 
 function mapPlaylistSummary(p: SpotifyPlaylistObject): PlaylistSummary {
   return {
-    id: p.id,
-    name: p.name,
-    description: p.description ?? "",
-    trackCount: p.tracks?.total ?? 0,
-    public: p.public ?? false,
-    url: p.external_urls?.spotify ?? "",
-    imageUrl: p.images?.[0]?.url ?? null,
+    id: String(p.id ?? ""),
+    name: String(p.name ?? ""),
+    description: String(p.description ?? ""),
+    trackCount: typeof p.tracks?.total === "number" ? p.tracks.total : 0,
+    public: typeof p.public === "boolean" ? p.public : false,
+    url: String(p.external_urls?.spotify ?? ""),
+    imageUrl: typeof p.images?.[0]?.url === "string" ? p.images[0].url : null,
   };
 }
 
