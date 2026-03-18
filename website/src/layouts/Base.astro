@@ -30,8 +30,7 @@ const ogImageURL = new URL(ogImage, Astro.site).toString();
     <meta name="generator" content={Astro.generator} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
 
-    <!-- Security -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';" />
+    <!-- Security: CSP and all security headers are set server-side via Cloudflare Pages _headers file -->
 
     <!-- Primary Meta -->
     <title>{fullTitle}</title>
