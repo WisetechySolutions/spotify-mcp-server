@@ -56,7 +56,13 @@ export class TokenStore {
         throw new Error("Token file contains invalid JSON after decryption");
       }
 
-      // Wipe the decrypted JSON string from the variable
+      // SECURITY: Reject prototype pollution attempts in token data
+      if (json.includes("__proto__") || json.includes("constructor.prototype")) {
+        throw new Error("Token file contains forbidden keys");
+      }
+
+      // Remove reference to decrypted data (note: JS strings are immutable —
+      // the original remains in V8's heap until garbage collected)
       json = "";
 
       // Validate required fields exist with correct types

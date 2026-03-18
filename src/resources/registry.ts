@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { spotifyFetch, isAuthenticated } from "../spotify/client.js";
+import { spotifyFetch, isAuthenticated, safeParseJsonResponse } from "../spotify/client.js";
 
 /**
  * Register MCP resources — read-only data that Claude can access.
@@ -41,7 +41,7 @@ export function registerResources(server: McpServer): void {
         };
       }
 
-      const profile = (await response.json()) as Record<string, unknown>;
+      const profile = (await safeParseJsonResponse(response)) as Record<string, unknown>;
 
       // Only expose non-sensitive fields
       const safe = {

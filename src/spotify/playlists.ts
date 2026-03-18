@@ -1,4 +1,4 @@
-import { spotifyFetch, sanitizeQueryParam } from "./client.js";
+import { spotifyFetch, sanitizeQueryParam, safeParseJsonResponse } from "./client.js";
 
 export interface PlaylistSummary {
   id: string;
@@ -46,7 +46,7 @@ export async function getMyPlaylists(params?: {
     });
   }
 
-  const data = (await response.json()) as SpotifyPaginatedPlaylists;
+  const data = (await safeParseJsonResponse(response)) as SpotifyPaginatedPlaylists;
 
   // Validate response structure
   if (!data || typeof data !== "object" || !Array.isArray(data.items)) {
@@ -74,7 +74,7 @@ export async function getPlaylist(playlistId: string): Promise<PlaylistDetail> {
     });
   }
 
-  const data = (await response.json()) as SpotifyFullPlaylist;
+  const data = (await safeParseJsonResponse(response)) as SpotifyFullPlaylist;
 
   // Validate response structure
   if (!data || typeof data !== "object" || typeof data.id !== "string") {
@@ -131,7 +131,7 @@ export async function createPlaylist(params: {
     });
   }
 
-  const data = (await response.json()) as SpotifyPlaylistObject;
+  const data = (await safeParseJsonResponse(response)) as SpotifyPlaylistObject;
 
   // Validate response structure
   if (!data || typeof data !== "object" || typeof data.id !== "string") {

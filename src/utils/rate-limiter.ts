@@ -24,6 +24,14 @@ export class RateLimiter {
    * Resolves immediately if under budget, otherwise waits.
    */
   async acquire(): Promise<void> {
+    // SECURITY: Cap array sizes to prevent unbounded memory growth
+    if (this.timestamps.length > MAX_REQUESTS * 3) {
+      this.timestamps = this.timestamps.slice(-MAX_REQUESTS);
+    }
+    if (this.minuteTimestamps.length > HARD_CEILING_PER_MINUTE * 3) {
+      this.minuteTimestamps = this.minuteTimestamps.slice(-HARD_CEILING_PER_MINUTE);
+    }
+
     // If paused due to 429, wait it out
     const now = Date.now();
     if (now < this.pausedUntil) {

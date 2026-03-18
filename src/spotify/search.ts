@@ -1,4 +1,4 @@
-import { spotifyFetch, sanitizeQueryParam } from "./client.js";
+import { spotifyFetch, sanitizeQueryParam, safeParseJsonResponse } from "./client.js";
 
 export interface TrackResult {
   uri: string;
@@ -52,7 +52,7 @@ export async function searchTracks(params: {
     });
   }
 
-  const data = (await response.json()) as SpotifySearchResponse;
+  const data = (await safeParseJsonResponse(response)) as SpotifySearchResponse;
 
   // Validate response structure before accessing properties
   if (data && typeof data === "object" && data.tracks && Array.isArray(data.tracks.items)) {

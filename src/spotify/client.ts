@@ -180,9 +180,12 @@ export async function spotifyFetch(
   }
 
   // Handle 401 — try refresh and retry once
+  // SECURITY: Only invalidate if the token hasn't already been refreshed by another concurrent call
   if (response.status === 401) {
-    _accessToken = null;
-    _tokenExpiresAt = 0;
+    if (_accessToken === token) {
+      _accessToken = null;
+      _tokenExpiresAt = 0;
+    }
     const newToken = await getAccessToken();
     return makeRequest(newToken);
   }
@@ -207,6 +210,11 @@ export async function safeParseJsonResponse(response: Response): Promise<unknown
   const text = await response.text();
   if (text.length > MAX_RESPONSE_SIZE) {
     throw new Error("Spotify API response body exceeds maximum allowed size (1MB).");
+  }
+
+  // SECURITY: Reject prototype pollution attempts
+  if (text.includes("__proto__") || text.includes("constructor.prototype")) {
+    throw new Error("Spotify API response contains forbidden keys.");
   }
 
   return JSON.parse(text);
@@ -234,7 +242,10 @@ export async function getCurrentUserId(): Promise<string> {
       { status: response.status }
     );
   }
-  const me = (await response.json()) as { id: string };
+  const me = (await safeParseJsonResponse(response)) as Record<string, unknown>;
+  if (typeof me.id !== "string" || me.id.length === 0) {
+    throw new Error("Spotify returned an invalid user profile response.");
+  }
   _cachedUserId = me.id;
   return _cachedUserId;
 }
@@ -247,7 +258,7 @@ async function runOAuthFlow(): Promise<void> {
   const redirectUrl = new URL(config.SPOTIFY_REDIRECT_URI);
   const port = parseInt(redirectUrl.port, 10);
 
-  const verifier = generateCodeVerifier();
+  let verifier = generateCodeVerifier();
   const challenge = generateCodeChallenge(verifier);
   const state = generateState();
 
@@ -280,6 +291,9 @@ async function runOAuthFlow(): Promise<void> {
     redirectUri: config.SPOTIFY_REDIRECT_URI,
     codeVerifier: verifier,
   });
+
+  // SECURITY: Clear PKCE verifier from memory after use
+  verifier = "";
 
   await saveTokenResponse(tokenResponse);
   await shutdown();

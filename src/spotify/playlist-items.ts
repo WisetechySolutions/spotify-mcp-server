@@ -1,4 +1,4 @@
-import { spotifyFetch } from "./client.js";
+import { spotifyFetch, safeParseJsonResponse } from "./client.js";
 
 /**
  * Add tracks to a playlist.
@@ -43,7 +43,7 @@ export async function addTracksToPlaylist(params: {
     );
   }
 
-  const data = (await response.json()) as { snapshot_id: string };
+  const data = (await safeParseJsonResponse(response)) as { snapshot_id: string };
 
   // Validate response structure
   if (!data || typeof data !== "object" || typeof data.snapshot_id !== "string") {
@@ -88,7 +88,7 @@ export async function removeTracksFromPlaylist(params: {
     );
   }
 
-  const data = (await response.json()) as { snapshot_id: string };
+  const data = (await safeParseJsonResponse(response)) as { snapshot_id: string };
 
   // Validate response structure
   if (!data || typeof data !== "object" || typeof data.snapshot_id !== "string") {

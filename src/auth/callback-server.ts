@@ -1,4 +1,5 @@
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from "node:http";
+import { timingSafeEqual } from "node:crypto";
 
 const TIMEOUT_MS = 120_000; // Auto-shutdown after 2 minutes
 const MAX_REQUEST_SIZE = 4096; // 4KB max request size
@@ -119,7 +120,8 @@ export function startCallbackServer(
         return;
       }
 
-      if (!code || !state || state !== expectedState) {
+      if (!code || !state || state.length !== expectedState.length ||
+          !timingSafeEqual(Buffer.from(state), Buffer.from(expectedState))) {
         res.writeHead(400, SECURITY_HEADERS);
         res.end(errorPage("Invalid callback — state mismatch or missing code."));
         settle("reject", new Error("Invalid OAuth callback: state mismatch or missing code"));
