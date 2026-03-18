@@ -3,7 +3,25 @@ import Base from '../layouts/Base.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 
-const playlists = [
+const featured = [
+  {
+    title: 'Dear World, We\'re Sorry — Love, Most of Us',
+    prompt: 'An apology playlist from the Americans who are watching in horror — songs of remorse, solidarity, and stubborn hope',
+    trackCount: 100,
+    tracks: ['Marvin Gaye — What\'s Going On', 'Bob Dylan — Blowin\' in the Wind', 'Billie Holiday — Strange Fruit', 'Public Enemy — Fight the Power', 'Kendrick Lamar — Alright', 'Sam Cooke — A Change Is Gonna Come', 'Patti Smith — People Have the Power'],
+    tags: ['Timely', '100 Tracks'],
+    color: '#dc2626',
+    url: 'https://open.spotify.com/playlist/2orIfaPVOb4DqV1xD3GF01',
+  },
+  {
+    title: 'Songs That Need No Translation',
+    prompt: 'Music in every language that hits you in the chest — fado, qawwali, bossa nova, throat singing. Emotion is universal.',
+    trackCount: 25,
+    tracks: ['Fairuz — Bint El Shalabiya', 'Miriam Makeba — Malaika', 'Buena Vista Social Club — Chan Chan', 'Edith Piaf — La Vie en Rose', 'Gipsy Kings — Bamboleo', 'Sergio Mendes — Mas Que Nada'],
+    tags: ['World', 'Cross-Cultural'],
+    color: '#0ea5e9',
+    url: 'https://open.spotify.com/playlist/0NN5naxbctqXy6wMLxjUcW',
+  },
   {
     title: 'The Beautiful Futility',
     prompt: 'Songs about pushing boulders uphill — Sisyphus vibes, futile struggle turned beautiful',
@@ -12,15 +30,6 @@ const playlists = [
     tags: ['Thematic', 'Literary'],
     color: '#8b5cf6',
     url: 'https://open.spotify.com/playlist/0Hc07yRYtfEdsvPGXM0ZU0',
-  },
-  {
-    title: 'Mount Olympus Has a Jukebox',
-    prompt: 'Songs referencing Greek mythology — gods, heroes, and mortals',
-    trackCount: 45,
-    tracks: ['Led Zeppelin — Achilles Last Stand', 'Fleetwood Mac — Rhiannon', 'Iron Maiden — Flight of Icarus', 'Hozier — Take Me to Church', 'ABBA — Cassandra', 'Weyes Blood — Andromeda', 'Echo & the Bunnymen — The Killing Moon'],
-    tags: ['Thematic', 'Mythology'],
-    color: '#f59e0b',
-    url: 'https://open.spotify.com/playlist/3EYdOzTlNxPufaqYD0KvzA',
   },
   {
     title: 'From Smoke to Circuits',
@@ -32,80 +41,91 @@ const playlists = [
     url: 'https://open.spotify.com/playlist/5zprYcSu5pd4sLpbgPEms5',
   },
   {
-    title: 'Letters To Who I Used To Be',
-    prompt: 'Songs where the narrator is talking to their past self',
-    trackCount: 43,
-    tracks: ['Pink Floyd — Time', 'Cat Stevens — Father and Son', 'Talking Heads — Once in a Lifetime', 'LCD Soundsystem — All My Friends', 'Green Day — Good Riddance', 'David Bowie — Changes', 'Coldplay — The Scientist'],
-    tags: ['Thematic', 'Introspective'],
-    color: '#ec4899',
-    url: 'https://open.spotify.com/playlist/1M9NOB9aHVmZ3noomiO8qc',
-  },
-  {
-    title: 'The Musical Argument',
-    prompt: 'Songs two rivals would play at each other in a musical argument',
-    trackCount: 40,
-    tracks: ['Kendrick Lamar — HUMBLE.', 'Nirvana — Smells Like Teen Spirit', 'AC/DC — Back in Black', 'The White Stripes — Seven Nation Army', 'Beastie Boys — Sabotage', 'Led Zeppelin — Immigrant Song', 'System of a Down — Chop Suey!'],
-    tags: ['Creative', 'High Energy'],
-    color: '#ef4444',
-    url: 'https://open.spotify.com/playlist/0ydq9BDALW3e5rz9u0gcw7',
-  },
-  {
-    title: '3AM at the Diner',
-    prompt: 'Songs that feel like 3am in a diner — lonely but not sad, warm coffee and neon lights',
+    title: 'Songs for When God is Talking',
+    prompt: 'Music that feels like a conversation with the divine — songs that make you pull your car over and just sit there',
     trackCount: 25,
-    tracks: ['Mazzy Star — Fade Into You', 'Joni Mitchell — A Case of You', 'Norah Jones — Come Away with Me', 'Cigarettes After Sex — Apocalypse', 'Chris Isaak — Wicked Game', 'Portishead — Glory Box', 'Amy Winehouse — Love Is a Losing Game'],
-    tags: ['Mood', 'Atmospheric'],
-    color: '#06b6d4',
-    url: 'https://open.spotify.com/playlist/3oSj722cI7kYIiE3aMm4kJ',
+    tracks: ['Aretha Franklin — Amazing Grace', 'Kanye West — Ultralight Beam', 'Leonard Cohen — Hallelujah', 'Curtis Mayfield — People Get Ready', 'Edwin Hawkins — Oh Happy Day', 'Madonna — Like a Prayer'],
+    tags: ['Spiritual', 'Transcendent'],
+    color: '#eab308',
+    url: 'https://open.spotify.com/playlist/3i8NdN9QN4PZrv7D8uy1nl',
   },
   {
-    title: 'Soundtrack to a Film That Doesn\'t Exist',
-    prompt: 'Cinematic instrumentals for an imaginary film — noir tension, quiet revelations, a bittersweet ending',
-    trackCount: 20,
-    tracks: ['Hans Zimmer — Time', 'Clint Mansell — Lux Aeterna', 'Yann Tiersen — Comptine d\'un autre été', 'Ennio Morricone — The Ecstasy of Gold', 'Ryuichi Sakamoto — Merry Christmas Mr. Lawrence', 'Vangelis — Blade Runner Blues', 'Sigur Ros — Hoppipolla'],
-    tags: ['Cinematic', 'Instrumental'],
-    color: '#a855f7',
-    url: 'https://open.spotify.com/playlist/4ciTEFQSZR0RpvcltVGUom',
+    title: 'Songs That Hit Different at 2AM Alone',
+    prompt: 'The playlist you put on when everyone else is asleep and you\'re staring at the ceiling thinking about everything',
+    trackCount: 25,
+    tracks: ['Bon Iver — Skinny Love', 'Radiohead — No Surprises', 'Mazzy Star — Fade Into You', 'Beach House — Space Song', 'Sufjan Stevens — Death With Dignity', 'Phoebe Bridgers — Motion Sickness'],
+    tags: ['Relatable', 'Late Night'],
+    color: '#6366f1',
+    url: 'https://open.spotify.com/playlist/4vEMi6JmCUt2EZXgJHARLY',
   },
   {
-    title: 'Songs That Should Have Been Hits',
-    prompt: 'Deep cuts and overlooked gems from legendary artists — the songs hardcore fans know but never charted',
-    trackCount: 26,
-    tracks: ['Radiohead — Reckoner', 'Talking Heads — This Must Be the Place', 'Joy Division — Atmosphere', 'The Cure — Pictures of You', 'Nick Drake — Northern Sky', 'Depeche Mode — Enjoy the Silence', 'Elliott Smith — Angeles'],
-    tags: ['Deep Cuts', 'Curation'],
-    color: '#14b8a6',
-    url: 'https://open.spotify.com/playlist/1TeJyY9H7QpWB8CAwn45Gy',
+    title: 'Mount Olympus Has a Jukebox',
+    prompt: 'Songs referencing Greek mythology — gods, heroes, and mortals',
+    trackCount: 45,
+    tracks: ['Led Zeppelin — Achilles Last Stand', 'Fleetwood Mac — Rhiannon', 'Iron Maiden — Flight of Icarus', 'Hozier — Take Me to Church', 'Weyes Blood — Andromeda', 'Echo & the Bunnymen — The Killing Moon'],
+    tags: ['Thematic', 'Mythology'],
+    color: '#f59e0b',
+    url: 'https://open.spotify.com/playlist/3EYdOzTlNxPufaqYD0KvzA',
   },
   {
     title: 'Dedications After Dark',
-    prompt: 'Songs you\'d call into the radio at midnight to dedicate to someone special — 80s and 90s power ballads and love songs',
+    prompt: 'Songs you\'d call into the radio at midnight to dedicate to someone special — 80s and 90s power ballads',
     trackCount: 28,
-    tracks: ['Whitney Houston — I Will Always Love You', 'Foreigner — I Want to Know What Love Is', 'Peter Gabriel — In Your Eyes', 'Bon Jovi — Always', 'Savage Garden — Truly Madly Deeply', 'George Michael — Careless Whisper', 'Journey — Faithfully'],
+    tracks: ['Whitney Houston — I Will Always Love You', 'Foreigner — I Want to Know What Love Is', 'Peter Gabriel — In Your Eyes', 'Bon Jovi — Always', 'Savage Garden — Truly Madly Deeply', 'George Michael — Careless Whisper'],
     tags: ['Nostalgia', 'Romance'],
     color: '#f472b6',
     url: 'https://open.spotify.com/playlist/72aLljhEklybrBBmkleOVc',
   },
 ];
+
+const allPlaylists = [
+  { title: 'Quiet Defiance', url: 'https://open.spotify.com/playlist/334mgsZ9xoEFtiAGLpl4ff', desc: 'Dignity as resistance. Hope as rebellion.' },
+  { title: 'Songs for Parents Who Are Tired but Trying', url: 'https://open.spotify.com/playlist/55r0ZYvxp1lT0bSyTARYUd', desc: 'You showed up again today and that matters.' },
+  { title: 'Songs for Doomscrolling Recovery', url: 'https://open.spotify.com/playlist/2N8n9W2SJmNQAQXTpwZOFb', desc: 'Put the phone down. These songs bring you back.' },
+  { title: 'Songs for When You Finally Set a Boundary', url: 'https://open.spotify.com/playlist/3RD1ygSdmU3MbzSckAeAQo', desc: 'You said no. You meant it. You feel free.' },
+  { title: 'Songs That Feel Like a Hug', url: 'https://open.spotify.com/playlist/3dqmhpDY9HlZFZTChNPvZM', desc: 'Someone sitting with you saying "yeah, I know."' },
+  { title: 'Songs Your Therapist Would Be Proud Of', url: 'https://open.spotify.com/playlist/4XarDt2h9SSnfMangDu49v', desc: 'Boundary-setting anthems and self-compassion ballads.' },
+  { title: 'Songs That Make Atheists Pray', url: 'https://open.spotify.com/playlist/58AM2ZOmwxhnjG2EuMgpQo', desc: 'Music that breaks through every wall.' },
+  { title: 'Songs You Didn\'t Know You Needed to Cry To', url: 'https://open.spotify.com/playlist/2b4oVzBsMfbCNOOmaRgHVr', desc: 'You weren\'t even sad. Then this song came on.' },
+  { title: 'Songs for the Main Character Moment', url: 'https://open.spotify.com/playlist/5F78EDRht9Y7g00TUKRKtQ', desc: 'Walking in slow motion. Wind in your hair.' },
+  { title: 'The Villain\'s Playlist', url: 'https://open.spotify.com/playlist/5oOUvaehaBNWHScnjA2vx1', desc: 'Every villain needs a soundtrack.' },
+  { title: 'If Historical Figures Had Walkout Songs', url: 'https://open.spotify.com/playlist/1I2Xx3drypsj6bCW0lr8RW', desc: 'Entrance music for legends.' },
+  { title: 'Songs That Sound Like Colors', url: 'https://open.spotify.com/playlist/2J4jg2S9c80OMFZgk1dMRg', desc: 'A synesthesia playlist — each track IS a color.' },
+  { title: 'The World Is Grieving Together', url: 'https://open.spotify.com/playlist/4lx24L0eaL2lcOjsJE0jMd', desc: 'Songs of collective sorrow from every continent.' },
+  { title: 'Midnight Kitchen Music', url: 'https://open.spotify.com/playlist/2JE6PzGrN4BqrqIyrSrEJr', desc: '3am, can\'t sleep, making tea in a dark kitchen.' },
+  { title: 'Letters To Who I Used To Be', url: 'https://open.spotify.com/playlist/1M9NOB9aHVmZ3noomiO8qc', desc: 'Songs where the narrator talks to their past self.' },
+  { title: 'The Musical Argument', url: 'https://open.spotify.com/playlist/0ydq9BDALW3e5rz9u0gcw7', desc: 'Songs two rivals play at each other.' },
+  { title: '3AM at the Diner', url: 'https://open.spotify.com/playlist/3oSj722cI7kYIiE3aMm4kJ', desc: 'Lonely but not sad, warm coffee and neon lights.' },
+  { title: 'Soundtrack to a Film That Doesn\'t Exist', url: 'https://open.spotify.com/playlist/4ciTEFQSZR0RpvcltVGUom', desc: 'Cinematic instrumentals for an imaginary film.' },
+  { title: 'Songs That Should Have Been Hits', url: 'https://open.spotify.com/playlist/1TeJyY9H7QpWB8CAwn45Gy', desc: 'Deep cuts from legendary artists.' },
+];
 ---
 
 <Base
   title="Example Playlists"
-  description="See what Claude creates — a gallery of AI-curated playlists that no algorithm could imagine. Listen on Spotify."
+  description="27 AI-curated playlists that no algorithm could imagine. From 100-track apologies to the world, to songs that need no translation. Listen on Spotify."
 >
   <Header />
   <main id="main-content" class="examples-page">
     <div class="container">
       <span class="section-label">Showcase</span>
       <h1>Example Playlists</h1>
-      <p class="intro">Real playlists created by Claude using the Spotify MCP Server. Each one started as a single sentence. Click any playlist to listen on Spotify.</p>
+      <p class="intro">27 playlists created by Claude using the Spotify MCP Server. Each one started as a single sentence. Every playlist is public — click to listen.</p>
 
+      <div class="stats-bar">
+        <div class="stat-item"><strong>27</strong> playlists</div>
+        <div class="stat-item"><strong>665+</strong> tracks</div>
+        <div class="stat-item"><strong>20+</strong> genres</div>
+        <div class="stat-item"><strong>6</strong> continents</div>
+      </div>
+
+      <h2 class="section-heading">Featured</h2>
       <div class="gallery">
-        {playlists.map((playlist, i) => (
+        {featured.map((playlist, i) => (
           <div class="playlist-card" style={`--card-accent: ${playlist.color}`}>
             <div class="card-accent-line" aria-hidden="true"></div>
             <div class="playlist-header">
               <div>
-                <span class="playlist-number">#{i + 1}</span>
                 <h2>{playlist.title}</h2>
               </div>
               <div class="header-right">
@@ -125,15 +145,15 @@ const playlists = [
             </div>
             <blockquote>"{playlist.prompt}"</blockquote>
             <div class="track-list">
-              <h3>Tracks</h3>
+              <h3>Sample Tracks</h3>
               <ol>
                 {playlist.tracks.map((track) => {
-                  const [artist, song] = track.split(' — ');
+                  const parts = track.split(' — ');
                   return (
                     <li>
-                      <span class="track-artist">{artist}</span>
+                      <span class="track-artist">{parts[0]}</span>
                       <span class="track-sep">—</span>
-                      <span class="track-name">{song}</span>
+                      <span class="track-name">{parts[1]}</span>
                     </li>
                   );
                 })}
@@ -145,9 +165,28 @@ const playlists = [
 
       <hr class="glow-line" />
 
+      <h2 class="section-heading">All Playlists</h2>
+      <p class="all-intro">Every playlist Claude created — click any to listen on Spotify.</p>
+      <div class="all-grid">
+        {allPlaylists.map((p) => (
+          <a href={p.url} target="_blank" rel="noopener noreferrer" class="all-card">
+            <h3>{p.title}</h3>
+            <p>{p.desc}</p>
+            <span class="listen-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+              </svg>
+              Listen on Spotify
+            </span>
+          </a>
+        ))}
+      </div>
+
+      <hr class="glow-line" />
+
       <div class="cta-block">
-        <h2>Ready to create your own?</h2>
-        <p>Set up the Spotify MCP Server and start asking Claude for playlists.</p>
+        <h2>Create your own</h2>
+        <p>Set up the Spotify MCP Server and tell Claude what you want to hear.</p>
         <a href="/setup" class="btn btn-primary">
           Get Started
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -172,31 +211,54 @@ const playlists = [
   .intro {
     color: var(--text-muted);
     font-size: 1.1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
     margin-bottom: 3rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .stat-item strong {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+  }
+
+  .section-heading {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 
   .gallery {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   .playlist-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 2rem;
+    padding: 1.75rem;
     position: relative;
     overflow: hidden;
-    transition: all 0.3s var(--ease-out);
+    transition: border-color 0.3s var(--ease-out);
   }
 
   .playlist-card:hover {
     border-color: var(--card-accent, var(--border));
-    transform: translateY(-1px);
-    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
   }
 
   .card-accent-line {
@@ -223,17 +285,8 @@ const playlists = [
     flex-wrap: wrap;
   }
 
-  .playlist-number {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    display: block;
-    margin-bottom: 0.25rem;
-  }
-
   .playlist-header h2 {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
   }
 
   .header-right {
@@ -263,7 +316,6 @@ const playlists = [
     color: var(--text-muted);
     font-weight: 500;
     border: 1px solid var(--border);
-    letter-spacing: 0.02em;
   }
 
   .spotify-link {
@@ -316,7 +368,7 @@ const playlists = [
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.35rem;
   }
 
   .track-list li {
@@ -324,7 +376,6 @@ const playlists = [
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.3rem 0;
   }
 
   .track-artist {
@@ -338,6 +389,59 @@ const playlists = [
 
   .track-name {
     color: var(--text-muted);
+  }
+
+  /* All Playlists Grid */
+  .all-intro {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .all-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .all-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.25s var(--ease-out);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-decoration: none;
+  }
+
+  .all-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .all-card h3 {
+    font-size: 1rem;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .all-card p {
+    color: var(--text-muted);
+    font-size: 0.825rem;
+    line-height: 1.5;
+    flex-grow: 1;
+  }
+
+  .listen-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #1DB954;
+    margin-top: 0.25rem;
   }
 
   .cta-block {
@@ -356,50 +460,35 @@ const playlists = [
 
   @media (max-width: 768px) {
     .examples-page { padding: 3rem 0; }
-    .intro { font-size: 0.95rem; margin-bottom: 2rem; padding-bottom: 1.5rem; }
+    .intro { font-size: 0.95rem; }
+    .stats-bar { gap: 1rem; padding: 0.85rem 1rem; }
+    .stat-item { font-size: 0.8rem; }
     .gallery { gap: 1rem; }
-    .playlist-card {
-      padding: 1.25rem;
-      border-radius: 12px;
-    }
-    /* Disable hover transform on touch — prevents bobbing */
-    .playlist-card:hover {
-      transform: none;
-      box-shadow: none;
-    }
-    .playlist-header {
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .playlist-header h2 { font-size: 1.2rem; }
-    .playlist-number { font-size: 0.65rem; }
-    .header-right {
-      gap: 0.5rem;
-    }
+    .playlist-card { padding: 1.25rem; border-radius: 12px; }
+    .playlist-card:hover { transform: none; box-shadow: none; }
+    .playlist-header { flex-direction: column; gap: 0.5rem; }
+    .playlist-header h2 { font-size: 1.15rem; }
+    .header-right { gap: 0.5rem; }
     .track-count { font-size: 0.7rem; }
-    .tags { gap: 0.3rem; }
     .tag { font-size: 0.6rem; padding: 0.15rem 0.5rem; }
     .spotify-link { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
-    blockquote { font-size: 0.9rem; padding-left: 0.75rem; margin-bottom: 1rem; }
+    blockquote { font-size: 0.875rem; padding-left: 0.75rem; margin-bottom: 1rem; }
     .track-list { padding: 1rem; border-radius: 10px; }
-    .track-list li { font-size: 0.8rem; flex-wrap: wrap; }
-    .track-artist { font-size: 0.8rem; }
-    .track-name { font-size: 0.8rem; }
+    .track-list li { font-size: 0.8rem; }
+    .all-grid { grid-template-columns: 1fr; }
+    .all-card { padding: 1rem; }
     .cta-block { padding: 2.5rem 0 1rem; }
-    .cta-block h2 { font-size: 1.3rem; }
-    .cta-block p { font-size: 0.9rem; }
   }
 
   @media (max-width: 480px) {
     .playlist-card { padding: 1rem; }
-    .playlist-header h2 { font-size: 1.1rem; }
-    blockquote { font-size: 0.85rem; }
+    .playlist-header h2 { font-size: 1.05rem; }
     .track-list li {
       flex-direction: column;
       align-items: flex-start;
       gap: 0;
     }
     .track-sep { display: none; }
-    .track-name { color: var(--text-muted); font-size: 0.75rem; }
+    .track-name { font-size: 0.75rem; }
   }
 </style>
