@@ -213,7 +213,7 @@ src/
 ```bash
 npm run build        # Compile TypeScript
 npm run dev          # Watch mode
-npm test             # Run 93 tests
+npm test             # Run 99 tests
 npm run inspect      # Test with MCP Inspector
 ```
 
