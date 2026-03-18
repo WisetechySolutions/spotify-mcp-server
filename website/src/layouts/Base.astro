@@ -59,13 +59,7 @@ const ogImageURL = new URL(ogImage, Astro.site).toString();
     <meta name="twitter:image" content={ogImageURL} />
     <meta name="twitter:image:alt" content={`${title} — ${siteName}`} />
 
-    <!-- Preconnect for performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Fonts: self-hosted via @fontsource (no Google CDN, no third-party requests) -->
 
     <!-- Cloudflare Web Analytics: auto-injected by Cloudflare Pages (no manual beacon needed) -->
 
