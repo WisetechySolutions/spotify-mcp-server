@@ -51,6 +51,18 @@ npm run inspect      # Test with MCP Inspector
 - Update documentation if needed
 - Fill out the PR template
 
+## Developer Certificate of Origin (DCO)
+
+All contributions must be signed off with a DCO. By signing off, you certify that:
+
+1. The contribution was created in whole or in part by you and you have the right to submit it under the MIT license; or
+2. The contribution is based on previous work that is covered under an appropriate open source license and you have the right to submit it under that license; or
+3. The contribution was provided to you by someone who certified (1) or (2) and you have not modified it.
+
+**How to sign off:** Add `Signed-off-by: Your Name <your.email@example.com>` to your commit message. You can do this automatically with `git commit -s`.
+
+This is the same process used by the Linux kernel and many major open source projects.
+
 ## Spotify Compliance
 
 When contributing, ensure:
