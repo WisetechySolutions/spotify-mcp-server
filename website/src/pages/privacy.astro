@@ -18,8 +18,16 @@ import Footer from '../components/Footer.astro';
       <h2>1. Overview</h2>
       <p>The Spotify MCP Server ("the Software") is a locally-installed developer tool. It operates entirely on your machine. No data is collected, transmitted to, or stored on any server operated by WisetechySolutions or any third party other than Spotify's official API endpoints.</p>
 
-      <h2>2. No Cookies, No Tracking</h2>
-      <p>This website and the Software use no cookies, no analytics trackers, no fingerprinting, and no third-party scripts that track user behavior. If Cloudflare Web Analytics is enabled in the future, it will operate in privacy-first mode (no cookies, no personal data collection, no cross-site tracking), in compliance with GDPR and CCPA without requiring consent banners.</p>
+      <h2>2. No Cookies, No Personal Data Tracking</h2>
+      <p>This website uses <strong>Cloudflare Web Analytics</strong>, a privacy-first analytics service that collects aggregate page view and performance data. Cloudflare Web Analytics:</p>
+      <ul>
+        <li><strong>Does not use cookies</strong> of any kind</li>
+        <li><strong>Does not collect personal data</strong> — no IP addresses, no user agents, no fingerprinting</li>
+        <li><strong>Does not track users across sites</strong> — no cross-site tracking</li>
+        <li><strong>Does not require consent banners</strong> under GDPR, CCPA, or ePrivacy Directive</li>
+        <li>Collects only: page URL, referrer, browser type, country (derived from edge location, not IP), and page load performance metrics</li>
+      </ul>
+      <p>No other analytics, tracking scripts, advertising pixels, or fingerprinting technologies are used on this website or in the Software. We do not use Google Analytics, Facebook Pixel, or any equivalent.</p>
 
       <h2>3. Authentication &amp; Token Storage</h2>
       <p>When you authenticate with Spotify through the Software, your OAuth tokens are:</p>
@@ -56,10 +64,12 @@ import Footer from '../components/Footer.astro';
       <p>The Software is a developer tool not directed at children under the age of 13. We do not knowingly collect or process data from children.</p>
 
       <h2>8. Third-Party Services</h2>
-      <p>The Software interacts with the following third-party services, each governed by their own privacy policies:</p>
+      <p>The Software and Website interact with the following third-party services, each governed by their own privacy policies:</p>
       <ul>
-        <li><strong>Spotify</strong> — <a href="https://www.spotify.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a></li>
-        <li><strong>Anthropic (Claude)</strong> — <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a></li>
+        <li><strong>Spotify</strong> — <a href="https://www.spotify.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> — used for music search and playlist creation</li>
+        <li><strong>Anthropic (Claude)</strong> — <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> — AI assistant that sends instructions to the MCP server</li>
+        <li><strong>Cloudflare</strong> — <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> — website hosting, CDN, DDoS protection, and privacy-first analytics</li>
+        <li><strong>Google Fonts</strong> — <a href="https://developers.google.com/fonts/faq/privacy" target="_blank" rel="noopener noreferrer">Privacy FAQ</a> — web fonts loaded from Google's CDN. Google may log IP addresses of visitors to fonts.googleapis.com per their standard server logging practices</li>
       </ul>
 
       <h2>9. Open Source Transparency</h2>

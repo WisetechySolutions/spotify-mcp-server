@@ -1,0 +1,74 @@
+THIRD-PARTY NOTICES AND TRADEMARK ATTRIBUTIONS
+
+This file contains notices and attributions required by third-party
+software licenses and trademark policies used in this project.
+
+================================================================================
+SPOTIFY
+================================================================================
+
+"Spotify" is a registered trademark of Spotify AB.
+
+This project uses the Spotify Web API in accordance with the Spotify
+Developer Terms of Service (https://developer.spotify.com/terms).
+
+This project is NOT affiliated with, endorsed by, sponsored by, or
+associated with Spotify AB. The Spotify name and logo are trademarks
+of Spotify AB.
+
+All music data accessed through this project is obtained via the official
+Spotify Web API and is subject to Spotify's Terms of Service. This project
+does not stream, download, cache, or redistribute any audio content.
+
+Per Spotify's Developer Policy:
+- No Spotify content is used to train any AI or ML model
+- No Spotify content is cached beyond the duration of each API request
+- No audio playback, streaming, or DJ/mixing functionality is provided
+- Users must authenticate with their own Spotify account
+- The disconnect_spotify tool provides full data deletion capability
+
+================================================================================
+ANTHROPIC / CLAUDE
+================================================================================
+
+"Claude" is a trademark of Anthropic, PBC.
+
+This project is designed to work with Claude (by Anthropic) via the Model
+Context Protocol (MCP). It is NOT affiliated with, endorsed by, sponsored
+by, or associated with Anthropic, PBC.
+
+References to "Claude" in this project's documentation and marketing
+describe interoperability with Anthropic's AI assistant product, in
+accordance with nominative fair use.
+
+This project does not use, access, or redistribute Anthropic's models,
+weights, or proprietary technology. It communicates with Claude only
+through the public MCP protocol interface.
+
+================================================================================
+MODEL CONTEXT PROTOCOL (MCP)
+================================================================================
+
+The Model Context Protocol is an open protocol specification.
+See: https://modelcontextprotocol.io
+
+The @modelcontextprotocol/sdk package is used under the MIT License.
+Copyright (c) Anthropic, PBC.
+
+================================================================================
+OPEN SOURCE LICENSES
+================================================================================
+
+This project (spotify-mcp-server) is distributed under the MIT License.
+See the LICENSE file for the full license text.
+
+Dependencies are distributed under their respective licenses. Run
+`npm ls --all --json` to list all dependencies and their licenses.
+
+================================================================================
+FONTS
+================================================================================
+
+Inter font family by Rasmus Andersson — SIL Open Font License 1.1
+JetBrains Mono by JetBrains — SIL Open Font License 1.1
+Loaded from Google Fonts (fonts.googleapis.com).

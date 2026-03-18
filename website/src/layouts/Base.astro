@@ -67,8 +67,7 @@ const ogImageURL = new URL(ogImage, Astro.site).toString();
       rel="stylesheet"
     />
 
-    <!-- Cloudflare Web Analytics (add token at deploy time) -->
-    <!-- <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "YOUR_CF_ANALYTICS_TOKEN"}'></script> -->
+    <!-- Cloudflare Web Analytics: auto-injected by Cloudflare Pages (no manual beacon needed) -->
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json" set:html={JSON.stringify({

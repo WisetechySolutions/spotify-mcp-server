@@ -19,6 +19,7 @@
   "files": [
     "dist",
     "LICENSE",
+    "NOTICE",
     "README.md",
     "CHANGELOG.md"
   ],
