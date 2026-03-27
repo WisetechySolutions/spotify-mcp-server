@@ -41,13 +41,13 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@modelcontextprotocol/sdk": "^1.28.0",
     "open": "^11.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.2"
   }
 }
