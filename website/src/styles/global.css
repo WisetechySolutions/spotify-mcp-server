@@ -11,9 +11,9 @@
   --bg-surface: #0c0c0c;
   --bg-elevated: #161616;
   --bg-card: #0f0f0f;
-  --text: #ececec;
-  --text-secondary: #b4b4b4;
-  --text-muted: #737373;
+  --text: #f5f5f5;
+  --text-secondary: #dcdcdc;
+  --text-muted: #a8a8a8;
   --accent: #1DB954;
   --accent-hover: #1ed760;
   --accent-dim: rgba(29, 185, 84, 0.12);
