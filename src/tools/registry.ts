@@ -10,8 +10,8 @@ import {
 import { searchTracks } from "../spotify/search.js";
 import { createPlaylist, getPlaylist, getMyPlaylists } from "../spotify/playlists.js";
 import { addTracksToPlaylist, removeTracksFromPlaylist } from "../spotify/playlist-items.js";
-import { sanitizeForModel } from "../utils/output-sanitize.js";
 import { withToolRateLimit, markDestructive } from "../utils/tool-rate-limit.js";
+import { sanitizeForModel } from "../utils/output-sanitize.js";
 import { spotifyErrorToMcp } from "../utils/error-handler.js";
 import { deleteTokens } from "../spotify/client.js";
 
@@ -32,6 +32,25 @@ function textResult(text: string): ToolResult {
  * to build playlists from its own music knowledge.
  */
 export function registerTools(server: McpServer): void {
+  // __RATE_LIMIT_SHIM_INSTALLED__
+  // Auto-wrap every server.tool() registration with the per-tool rate limiter.
+  // Defends against runaway model loops calling the same tool 1000x. Per-tool
+  // token bucket: 60/min default, 10/min for tools whose name matches a known
+  // destructive prefix (delete_, remove_, wipe_, etc.).
+  {
+    const origTool = (server.tool as unknown as Function).bind(server);
+    (server as unknown as { tool: Function }).tool = (name: string, ...args: unknown[]) => {
+      if (/^(delete_|remove_|wipe_|retire_|reset_|dismiss_|disconnect_|abandon_|cancel_|revoke_|kill_|destroy_|drop_)/.test(name)) {
+        markDestructive(name);
+      }
+      const last = args[args.length - 1];
+      if (typeof last === "function") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        args[args.length - 1] = withToolRateLimit(name, last as any);
+      }
+      return origTool(name, ...args);
+    };
+  }
   // ─── SEARCH ───────────────────────────────────────────────
 
   server.tool(
