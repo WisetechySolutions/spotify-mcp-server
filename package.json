@@ -35,13 +35,22 @@
     "test:watch": "vitest",
     "inspect": "npm run build && npx @modelcontextprotocol/inspector node dist/index.js"
   },
-  "keywords": ["mcp", "spotify", "claude", "playlist", "ai", "music", "curation"],
+  "keywords": [
+    "mcp",
+    "spotify",
+    "claude",
+    "playlist",
+    "ai",
+    "music",
+    "curation"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@napi-rs/keyring": "^1.2.0",
     "open": "^11.0.0",
     "zod": "^4.3.6"
   },

@@ -5,36 +5,116 @@ import { encrypt, decrypt } from "../utils/crypto.js";
 export interface StoredTokens {
   accessToken: string;
   refreshToken: string;
-  expiresAt: number; // Unix timestamp in ms
+  expiresAt: number;
   scope: string;
 }
 
-const MAX_TOKEN_FILE_SIZE = 10_240; // 10KB — encrypted tokens should be tiny
-const MIN_REASONABLE_TIMESTAMP = 0; // Unix epoch
-const MAX_REASONABLE_TIMESTAMP = 32_503_680_000_000; // Year 3000 in ms — unreasonable future
+const MAX_TOKEN_FILE_SIZE = 10_240;
+const MIN_REASONABLE_TIMESTAMP = 0;
+const MAX_REASONABLE_TIMESTAMP = 32_503_680_000_000;
 
 /**
- * Encrypted token persistence using AES-256-GCM.
- * Tokens are stored as a single encrypted JSON blob.
+ * Hybrid token store. Prefers the OS keyring (Windows DPAPI / macOS Keychain
+ * / Linux libsecret) via @napi-rs/keyring; falls back to AES-256-GCM-encrypted
+ * file-on-disk when the keyring is unavailable (CI, container without
+ * libsecret, tests, etc.).
  *
- * Security hardening:
- * - File size check before reading (reject > 10KB)
- * - JSON structure validation after decryption
- * - Timestamp reasonableness validation
- * - Decrypted data wiped from memory when no longer needed
+ * Why prefer keyring: on Windows, NTFS does not honor `chmod 0o600`, and an
+ * AES key sitting next to the ciphertext gives only obfuscation. DPAPI binds
+ * decryption to the user account — the actual threat boundary on a single-user
+ * box. Microsoft's own MSAL.NET uses DPAPI for cache encryption on Windows.
+ *
+ * Migration: on first load after upgrade, if the keyring is empty AND a
+ * legacy encrypted file exists, decrypt with the legacy key, write into the
+ * keyring, then delete the file.
+ *
+ * Vitest escape hatch: when `process.env.VITEST` is set, the keyring path is
+ * skipped entirely so existing file-based tests continue to drive the file
+ * path deterministically.
  */
 export class TokenStore {
+  private keyring: { getPassword: () => string | null; setPassword: (v: string) => void; deletePassword: () => boolean } | null = null;
+  private keyringTried = false;
+
   constructor(
+    private serviceName: string,
     private storagePath: string,
-    private encryptionKey: string
+    private encryptionKey: string,
   ) {}
 
-  /**
-   * Load tokens from encrypted file. Returns null if no file exists.
-   */
-  async load(): Promise<StoredTokens | null> {
+  private async getKeyring() {
+    if (this.keyringTried) return this.keyring;
+    this.keyringTried = true;
+    if (process.env.VITEST) return null;
+    if (process.env.MCP_DISABLE_KEYRING === "1") return null;
     try {
-      // Check file size before reading — defense against corrupted/malicious files
+      const mod = await import("@napi-rs/keyring");
+      const username = process.env.USERNAME || process.env.USER || "default";
+      const entry = new mod.Entry(this.serviceName, username);
+      try { entry.getPassword(); } catch { /* may throw "not found" */ }
+      this.keyring = entry as unknown as typeof this.keyring;
+      return this.keyring;
+    } catch {
+      return null;
+    }
+  }
+
+  async load(): Promise<StoredTokens | null> {
+    const kr = await this.getKeyring();
+    if (kr) {
+      let raw: string | null = null;
+      try { raw = kr.getPassword(); } catch { /* not-found */ }
+      if (raw) return parseAndValidate(raw);
+
+      const legacy = await this.loadLegacyFile();
+      if (legacy) {
+        try {
+          kr.setPassword(JSON.stringify(legacy));
+          await this.deleteLegacyFile();
+          process.stderr.write(`[mcp][${this.serviceName}] migrated token cache from ${this.storagePath} into OS keyring\n`);
+        } catch {
+          // Migration write failed — keep file as fallback so user remains signed in.
+        }
+        return legacy;
+      }
+      return null;
+    }
+    return this.loadLegacyFile();
+  }
+
+  async save(tokens: StoredTokens): Promise<void> {
+    validateTokenStructure(tokens);
+    const kr = await this.getKeyring();
+    if (kr) {
+      try {
+        kr.setPassword(JSON.stringify(tokens));
+        return;
+      } catch {
+        // Fall through to file write so we don't lose the cache update.
+      }
+    }
+    await this.saveLegacyFile(tokens);
+  }
+
+  async delete(): Promise<void> {
+    const kr = await this.getKeyring();
+    if (kr) {
+      try { kr.deletePassword(); } catch { /* not-found is fine */ }
+    }
+    await this.deleteLegacyFile();
+  }
+
+  async hasValidTokens(): Promise<boolean> {
+    const tokens = await this.load();
+    if (!tokens) return false;
+    const bufferMs = 5 * 60 * 1000;
+    return Date.now() < tokens.expiresAt - bufferMs;
+  }
+
+  // --- legacy file path (still used in tests, on keyring miss, and for migration) ---
+
+  private async loadLegacyFile(): Promise<StoredTokens | null> {
+    try {
       const fileStats = await stat(this.storagePath);
       if (fileStats.size > MAX_TOKEN_FILE_SIZE) {
         throw new Error("Token file exceeds maximum allowed size (10KB)");
@@ -48,51 +128,23 @@ export class TokenStore {
         throw new Error("Failed to decrypt token file");
       }
 
-      // Parse and validate JSON structure
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(json);
-      } catch {
-        throw new Error("Token file contains invalid JSON after decryption");
-      }
-
-      // SECURITY: Reject prototype pollution attempts in token data
-      if (json.includes("__proto__") || json.includes("constructor.prototype")) {
-        throw new Error("Token file contains forbidden keys");
-      }
-
-      // Remove reference to decrypted data (note: JS strings are immutable —
-      // the original remains in V8's heap until garbage collected)
-      json = "";
-
-      // Validate required fields exist with correct types
-      const tokens = validateTokenStructure(parsed);
-
-      return tokens;
+      return parseAndValidate(json);
     } catch (err: unknown) {
-      if (isNodeError(err) && err.code === "ENOENT") {
-        return null; // No token file yet
-      }
+      if (isNodeError(err) && err.code === "ENOENT") return null;
       if (err instanceof Error && (
         err.message.includes("maximum allowed size") ||
         err.message.includes("invalid JSON") ||
         err.message.includes("Invalid token") ||
+        err.message.includes("forbidden keys") ||
         err.message.includes("Failed to decrypt")
       )) {
-        throw err; // Re-throw our own validation errors with their specific messages
+        throw err;
       }
       throw new Error("Failed to load tokens. The token file may be corrupted or the encryption key may have changed.");
     }
   }
 
-  /**
-   * Save tokens to encrypted file.
-   * Creates parent directory if it doesn't exist.
-   */
-  async save(tokens: StoredTokens): Promise<void> {
-    // Validate before saving
-    validateTokenStructure(tokens);
-
+  private async saveLegacyFile(tokens: StoredTokens): Promise<void> {
     const dir = dirname(this.storagePath);
     await mkdir(dir, { recursive: true });
 
@@ -100,51 +152,37 @@ export class TokenStore {
     const encrypted = encrypt(json, this.encryptionKey);
     await writeFile(this.storagePath, encrypted, { mode: 0o600 });
 
-    // Attempt to set permissions (may not work on all Windows configs)
-    try {
-      await chmod(this.storagePath, 0o600);
-    } catch {
-      // Permissions not supported on this filesystem, continue
-    }
+    try { await chmod(this.storagePath, 0o600); } catch { /* not enforceable on NTFS */ }
   }
 
-  /**
-   * Delete the token file. Used for logout / data deletion.
-   */
-  async delete(): Promise<void> {
+  private async deleteLegacyFile(): Promise<void> {
     try {
       await unlink(this.storagePath);
     } catch (err: unknown) {
-      if (isNodeError(err) && err.code === "ENOENT") {
-        return; // Already deleted
-      }
+      if (isNodeError(err) && err.code === "ENOENT") return;
       throw err;
     }
   }
-
-  /**
-   * Check if tokens exist and are not expired.
-   * Includes a 5-minute buffer before actual expiry.
-   */
-  async hasValidTokens(): Promise<boolean> {
-    const tokens = await this.load();
-    if (!tokens) return false;
-    const bufferMs = 5 * 60 * 1000;
-    return Date.now() < tokens.expiresAt - bufferMs;
-  }
 }
 
-/**
- * Validate that the parsed object has the required StoredTokens shape.
- * Defense against corrupted or tampered token files.
- */
+function parseAndValidate(json: string): StoredTokens {
+  if (json.includes("__proto__") || json.includes("constructor.prototype")) {
+    throw new Error("Token data contains forbidden keys");
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    throw new Error("Token data contains invalid JSON");
+  }
+  return validateTokenStructure(parsed);
+}
+
 function validateTokenStructure(parsed: unknown): StoredTokens {
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     throw new Error("Invalid token structure: expected an object");
   }
-
   const obj = parsed as Record<string, unknown>;
-
   if (typeof obj.accessToken !== "string" || obj.accessToken.length === 0) {
     throw new Error("Invalid token structure: accessToken must be a non-empty string");
   }
@@ -160,7 +198,6 @@ function validateTokenStructure(parsed: unknown): StoredTokens {
   if (typeof obj.scope !== "string") {
     throw new Error("Invalid token structure: scope must be a string");
   }
-
   return {
     accessToken: obj.accessToken,
     refreshToken: obj.refreshToken,

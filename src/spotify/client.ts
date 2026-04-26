@@ -36,7 +36,7 @@ let _cachedUserId: string | null = null;
 function getTokenStore(): TokenStore {
   if (!_tokenStore) {
     const config = getConfig();
-    _tokenStore = new TokenStore(config.TOKEN_STORAGE_PATH, config.TOKEN_ENCRYPTION_KEY);
+    _tokenStore = new TokenStore("mcp-spotify", config.TOKEN_STORAGE_PATH, config.TOKEN_ENCRYPTION_KEY);
   }
   return _tokenStore;
 }

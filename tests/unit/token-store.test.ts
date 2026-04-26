@@ -17,13 +17,13 @@ describe("TokenStore", () => {
   });
 
   it("returns null when no token file exists", async () => {
-    const store = new TokenStore(TEST_PATH, TEST_KEY);
+    const store = new TokenStore("mcp-spotify-test", TEST_PATH, TEST_KEY);
     const tokens = await store.load();
     expect(tokens).toBeNull();
   });
 
   it("saves and loads tokens", async () => {
-    const store = new TokenStore(TEST_PATH, TEST_KEY);
+    const store = new TokenStore("mcp-spotify-test", TEST_PATH, TEST_KEY);
     const tokens = {
       accessToken: "access-123",
       refreshToken: "refresh-456",
@@ -37,7 +37,7 @@ describe("TokenStore", () => {
   });
 
   it("deletes tokens", async () => {
-    const store = new TokenStore(TEST_PATH, TEST_KEY);
+    const store = new TokenStore("mcp-spotify-test", TEST_PATH, TEST_KEY);
     await store.save({
       accessToken: "a",
       refreshToken: "r",
@@ -51,14 +51,14 @@ describe("TokenStore", () => {
   });
 
   it("delete is idempotent", async () => {
-    const store = new TokenStore(TEST_PATH, TEST_KEY);
+    const store = new TokenStore("mcp-spotify-test", TEST_PATH, TEST_KEY);
     await store.delete(); // file doesn't exist
     await store.delete(); // still doesn't exist
     // Should not throw
   });
 
   it("reports valid tokens correctly", async () => {
-    const store = new TokenStore(TEST_PATH, TEST_KEY);
+    const store = new TokenStore("mcp-spotify-test", TEST_PATH, TEST_KEY);
 
     // Not valid — no file
     expect(await store.hasValidTokens()).toBe(false);
@@ -83,7 +83,7 @@ describe("TokenStore", () => {
   });
 
   it("fails to load with wrong encryption key", async () => {
-    const store = new TokenStore(TEST_PATH, TEST_KEY);
+    const store = new TokenStore("mcp-spotify-test", TEST_PATH, TEST_KEY);
     await store.save({
       accessToken: "a",
       refreshToken: "r",
@@ -91,7 +91,7 @@ describe("TokenStore", () => {
       scope: "test",
     });
 
-    const wrongKeyStore = new TokenStore(TEST_PATH, randomBytes(32).toString("hex"));
+    const wrongKeyStore = new TokenStore("mcp-spotify-test", TEST_PATH, randomBytes(32).toString("hex"));
     await expect(wrongKeyStore.load()).rejects.toThrow();
   });
 });
