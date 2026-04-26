@@ -10,6 +10,8 @@ import {
 import { searchTracks } from "../spotify/search.js";
 import { createPlaylist, getPlaylist, getMyPlaylists } from "../spotify/playlists.js";
 import { addTracksToPlaylist, removeTracksFromPlaylist } from "../spotify/playlist-items.js";
+import { sanitizeForModel } from "../utils/output-sanitize.js";
+import { withToolRateLimit, markDestructive } from "../utils/tool-rate-limit.js";
 import { spotifyErrorToMcp } from "../utils/error-handler.js";
 import { deleteTokens } from "../spotify/client.js";
 
