@@ -64,7 +64,18 @@ export class TokenStore {
     if (kr) {
       let raw: string | null = null;
       try { raw = kr.getPassword(); } catch { /* not-found */ }
-      if (raw) return parseAndValidate(raw);
+      if (raw) {
+        try {
+          return parseAndValidate(raw);
+        } catch (err) {
+          // Corrupt keyring blob — JSON parse failure, missing field, prototype-pollution
+          // marker, or schema drift. Don't lock the user out forever: log to stderr,
+          // fall through to legacy-file then fresh re-auth. The bad blob will get
+          // overwritten on the next successful sign-in.
+          const msg = err instanceof Error ? err.message : String(err);
+          process.stderr.write(`[mcp][${this.serviceName}] keyring entry unreadable (${msg}); falling back to file/re-auth\n`);
+        }
+      }
 
       const legacy = await this.loadLegacyFile();
       if (legacy) {
