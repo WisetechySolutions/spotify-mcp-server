@@ -53,12 +53,16 @@ export function startCallbackServer(
     ) => {
       if (settled) return;
       settled = true;
+      // Always shut down the listener — even on resolve. The caller can still
+      // invoke the shutdown() returned in the resolve value, but if they throw
+      // before reaching it (token-exchange failure, save failure, network blip),
+      // we must not leak the bound port. shutdown() is idempotent.
       if (action === "resolve") {
         resolve(value as { code: string; shutdown: () => Promise<void> });
       } else {
         reject(value as Error);
-        shutdown();
       }
+      shutdown();
     };
 
     server = createServer((req: IncomingMessage, res: ServerResponse) => {
