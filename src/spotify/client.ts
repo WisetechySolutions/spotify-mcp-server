@@ -130,6 +130,11 @@ export async function spotifyFetch(
 
   const token = await getAccessToken();
 
+  // Defensive bound: at most one 401 retry and one 429 retry per high-level call.
+  // Explicit flags so a future refactor cannot accidentally introduce a loop.
+  let retried401 = false;
+  let retried429 = false;
+
   const makeRequest = async (bearerToken: string): Promise<Response> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -169,7 +174,8 @@ export async function spotifyFetch(
   const response = await makeRequest(token);
 
   // Handle 429 rate limiting
-  if (response.status === 429) {
+  if (response.status === 429 && !retried429) {
+    retried429 = true;
     const rawRetryAfter = parseInt(response.headers.get("retry-after") ?? "5", 10);
     const retryAfter = Math.min(Math.max(rawRetryAfter, 1), MAX_RETRY_AFTER_SECONDS);
     rateLimiter.onRateLimited(retryAfter);
@@ -181,7 +187,8 @@ export async function spotifyFetch(
 
   // Handle 401 — try refresh and retry once
   // SECURITY: Only invalidate if the token hasn't already been refreshed by another concurrent call
-  if (response.status === 401) {
+  if (response.status === 401 && !retried401) {
+    retried401 = true;
     if (_accessToken === token) {
       _accessToken = null;
       _tokenExpiresAt = 0;
