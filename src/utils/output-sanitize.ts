@@ -15,7 +15,7 @@
  */
 
 // Control chars except \t, \n. Drops \r, the C0 + C1 control range, and DEL.
-const CONTROL_CHARS = /[ --]/g;
+const CONTROL_CHARS = /[\u0000-\u0008\u000B-\u001F\u007F-\u009F]/g;
 
 // Unicode bidi overrides + zero-width + BOM:
 //   U+200B ZWSP, U+200C ZWNJ, U+200D ZWJ, U+200E LRM, U+200F RLM

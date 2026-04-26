@@ -22,7 +22,7 @@ type ToolResult = {
 };
 
 function textResult(text: string): ToolResult {
-  return { content: [{ type: "text" as const, text }] };
+  return { content: [{ type: "text" as const, text: sanitizeForModel(text, { maxLength: 65536 }) }] };
 }
 
 /**
