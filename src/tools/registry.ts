@@ -11,7 +11,7 @@ import { searchTracks } from "../spotify/search.js";
 import { createPlaylist, getPlaylist, getMyPlaylists } from "../spotify/playlists.js";
 import { addTracksToPlaylist, removeTracksFromPlaylist } from "../spotify/playlist-items.js";
 import { withToolRateLimit, markDestructive } from "../utils/tool-rate-limit.js";
-import { sanitizeForModel } from "../utils/output-sanitize.js";
+import { sanitizeForModel, fenceUntrusted } from "../utils/output-sanitize.js";
 import { spotifyErrorToMcp } from "../utils/error-handler.js";
 import { deleteTokens } from "../spotify/client.js";
 
@@ -81,7 +81,10 @@ Returns up to 10 results (Dev Mode limit) with URIs for playlist building.`,
         const trackList = result.tracks
           .map(
             (t, i) =>
-              `${i + 1}. "${t.name}" by ${t.artists.join(", ")}\n   Album: ${t.album} (${t.releaseDate})\n   URI: ${t.uri}\n   Link: ${t.externalUrl}`
+              // Track names, artist names, album names come from Spotify's public
+              // catalog — anyone with an artist account can put a prompt-injection
+              // payload in a track or album title. Fence them.
+              `${i + 1}. ${fenceUntrusted("track", t.name)} by ${fenceUntrusted("artists", t.artists.join(", "))}\n   Album: ${fenceUntrusted("album", t.album)} (${t.releaseDate})\n   URI: ${t.uri}\n   Link: ${t.externalUrl}`,
           )
           .join("\n\n");
 
@@ -187,18 +190,18 @@ Useful for analyzing existing playlists before suggesting additions or reorganiz
             ? playlist.tracks
                 .map(
                   (t, i) =>
-                    `${i + 1}. "${t.name}" by ${t.artists.join(", ")} [${t.album}]`
+                    `${i + 1}. ${fenceUntrusted("track", t.name)} by ${fenceUntrusted("artists", t.artists.join(", "))} [${fenceUntrusted("album", t.album)}]`,
                 )
                 .join("\n")
             : "(empty playlist)";
 
         return textResult(
-          `Playlist: ${playlist.name}\n` +
-            `By: ${playlist.owner}\n` +
-            `Description: ${playlist.description || "(none)"}\n` +
+          `Playlist: ${fenceUntrusted("playlist_name", playlist.name)}\n` +
+            `By: ${fenceUntrusted("owner", playlist.owner)}\n` +
+            `Description: ${fenceUntrusted("description", playlist.description || "(none)", { maxLength: 4096 })}\n` +
             `Tracks: ${playlist.trackCount}\n` +
             `URL: ${playlist.url}\n\n` +
-            `Track listing:\n${trackList}`
+            `Track listing:\n${trackList}`,
         );
       } catch (error) {
         return spotifyErrorToMcp(error);
@@ -228,7 +231,7 @@ or to find a playlist to modify.`,
         const list = result.playlists
           .map(
             (p, i) =>
-              `${i + 1 + (params.offset ?? 0)}. "${p.name}" — ${p.trackCount} tracks${p.public ? " (public)" : ""}\n   ID: ${p.id}\n   URL: ${p.url}`
+              `${i + 1 + (params.offset ?? 0)}. ${fenceUntrusted("playlist_name", p.name)} — ${p.trackCount} tracks${p.public ? " (public)" : ""}\n   ID: ${p.id}\n   URL: ${p.url}`,
           )
           .join("\n\n");
 
