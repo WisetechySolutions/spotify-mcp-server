@@ -31,6 +31,10 @@ function textResult(text: string): ToolResult {
  * Each tool is designed to be composable — Claude chains them together
  * to build playlists from its own music knowledge.
  */
+const READ_HINT = { readOnlyHint: true, openWorldHint: true } as const;
+const WRITE_HINT = { readOnlyHint: false, destructiveHint: false, openWorldHint: true } as const;
+const DESTRUCTIVE_HINT = { destructiveHint: true, idempotentHint: false, openWorldHint: true } as const;
+
 export function registerTools(server: McpServer): void {
   // __RATE_LIMIT_SHIM_INSTALLED__
   // Auto-wrap every server.tool() registration with the per-tool rate limiter.
@@ -61,7 +65,7 @@ export function registerTools(server: McpServer): void {
   - Or just plain text: "songs about rain"
 Returns up to 10 results (Dev Mode limit) with URIs for playlist building.`,
     searchTracksSchema.shape,
-    async (params, _extra): Promise<ToolResult> => {
+    { ...READ_HINT }, async (params, _extra): Promise<ToolResult> => {
       try {
         const result = await searchTracks({
           query: params.query,
@@ -98,7 +102,7 @@ Returns up to 10 results (Dev Mode limit) with URIs for playlist building.`,
 this is the creative touch that makes Claude-curated playlists special.
 Returns the playlist ID and URL for adding tracks.`,
     createPlaylistSchema.shape,
-    async (params, _extra): Promise<ToolResult> => {
+    { ...WRITE_HINT }, async (params, _extra): Promise<ToolResult> => {
       try {
         const playlist = await createPlaylist({
           name: params.name,
@@ -128,7 +132,7 @@ Returns the playlist ID and URL for adding tracks.`,
 Get URIs from search_tracks results. Max 100 tracks per call.
 Tracks are appended at the end unless a position is specified.`,
     addTracksSchema.shape,
-    async (params, _extra): Promise<ToolResult> => {
+    { ...WRITE_HINT }, async (params, _extra): Promise<ToolResult> => {
       try {
         const result = await addTracksToPlaylist({
           playlistId: params.playlist_id,
@@ -151,7 +155,7 @@ Tracks are appended at the end unless a position is specified.`,
     "remove_tracks_from_playlist",
     `Remove tracks from a playlist by their Spotify URIs.`,
     removeTracksSchema.shape,
-    async (params, _extra): Promise<ToolResult> => {
+    { ...DESTRUCTIVE_HINT }, async (params, _extra): Promise<ToolResult> => {
       try {
         const result = await removeTracksFromPlaylist({
           playlistId: params.playlist_id,
@@ -174,7 +178,7 @@ Tracks are appended at the end unless a position is specified.`,
     `Get details and full track listing of a playlist.
 Useful for analyzing existing playlists before suggesting additions or reorganizing.`,
     getPlaylistSchema.shape,
-    async (params, _extra): Promise<ToolResult> => {
+    { ...READ_HINT }, async (params, _extra): Promise<ToolResult> => {
       try {
         const playlist = await getPlaylist(params.playlist_id);
 
@@ -210,7 +214,7 @@ Useful for analyzing existing playlists before suggesting additions or reorganiz
 Use this to see what playlists already exist before creating new ones,
 or to find a playlist to modify.`,
     getMyPlaylistsSchema.shape,
-    async (params, _extra): Promise<ToolResult> => {
+    { ...READ_HINT }, async (params, _extra): Promise<ToolResult> => {
       try {
         const result = await getMyPlaylists({
           limit: params.limit,
