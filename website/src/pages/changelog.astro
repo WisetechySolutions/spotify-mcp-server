@@ -5,9 +5,32 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.1.0',
+    date: '2026-05-31',
+    tag: 'Latest',
+    sections: [
+      {
+        title: 'Security',
+        items: [
+          'Response size cap (1 MB) now enforced during transfer via a streaming byte-counting reader — holds even when the server omits Content-Length',
+          'disconnect_spotify is now confirm-gated (requires confirm: "DISCONNECT") and carries a destructive annotation',
+          'Hardened 429/401 retry: re-acquires the token and honors a second Retry-After, still strictly bounded (no loops)',
+          'Pinned transitive dependencies via overrides — npm audit (production) reports 0 vulnerabilities; SECURITY.md documents the stdio-only, transport-unreachable posture',
+          'Removed a redundant decrypt re-encrypt step (AES-256-GCM already authenticates on final())',
+        ],
+      },
+      {
+        title: 'Changed',
+        items: [
+          'remove_tracks_from_playlist now enforces the 100-URI cap in the API layer as well as the schema',
+          'Test suite expanded from 99 to 112 tests',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.0.0',
     date: '2026-03-15',
-    tag: 'Latest',
     sections: [
       {
         title: 'Added',
