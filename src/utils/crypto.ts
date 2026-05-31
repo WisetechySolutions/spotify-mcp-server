@@ -1,4 +1,4 @@
-import { randomBytes, createCipheriv, createDecipheriv, timingSafeEqual } from "node:crypto";
+import { randomBytes, createCipheriv, createDecipheriv } from "node:crypto";
 
 const ALGORITHM = "aes-256-gcm" as const;
 const IV_LENGTH = 12; // NIST SP 800-38D recommended length for AES-GCM
@@ -75,21 +75,14 @@ export function decrypt(packed: string, keyHex: string): string {
     const decipher = createDecipheriv(ALGORITHM, key, iv);
     decipher.setAuthTag(authTag);
 
+    // AES-GCM authenticates the ciphertext during decryption: decipher.final()
+    // throws if the auth tag does not match. No separate re-encryption pass is
+    // needed (re-encrypting just to re-derive the tag is redundant and doubles
+    // the crypto work). A forged/corrupted tag fails here.
     const decrypted = Buffer.concat([
       decipher.update(ciphertext),
       decipher.final(),
     ]);
-
-    // Timing-safe verification: re-derive auth tag and compare
-    // The GCM mode already verifies internally via setAuthTag + final(),
-    // but this adds an explicit belt-and-suspenders layer
-    const recipher = createCipheriv(ALGORITHM, key, iv);
-    recipher.update(decrypted);
-    recipher.final();
-    const expectedTag = recipher.getAuthTag();
-    if (!timingSafeEqual(authTag, expectedTag)) {
-      throw new Error("Authentication tag verification failed");
-    }
 
     return decrypted.toString("utf8");
   } finally {

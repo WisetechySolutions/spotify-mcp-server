@@ -33,7 +33,7 @@ async function main(): Promise<void> {
 
   const server = new McpServer({
     name: "spotify",
-    version: "1.0.0",
+    version: "1.1.0",
     description:
       "Create Spotify playlists with Claude's music knowledge. " +
       "Search tracks, build thematic playlists, discover music through " +

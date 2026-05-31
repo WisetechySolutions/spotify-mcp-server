@@ -70,6 +70,9 @@ export async function removeTracksFromPlaylist(params: {
   if (params.trackUris.length === 0) {
     throw new Error("No track URIs provided.");
   }
+  if (params.trackUris.length > 100) {
+    throw new Error("Maximum 100 tracks per request. Split into batches.");
+  }
 
   const response = await spotifyFetch(
     `/playlists/${encodeURIComponent(params.playlistId)}/items`,

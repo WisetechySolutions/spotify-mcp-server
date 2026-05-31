@@ -102,6 +102,15 @@ export const getPlaylistSchema = z.object({
   ).describe("Spotify playlist ID."),
 });
 
+export const disconnectSpotifySchema = z.object({
+  confirm: z
+    .literal("DISCONNECT")
+    .describe(
+      'Must be the exact string "DISCONNECT" to confirm. This deletes all stored ' +
+        "authentication tokens and requires re-authorization on the next request."
+    ),
+});
+
 export const getMyPlaylistsSchema = z.object({
   limit: z
     .number()

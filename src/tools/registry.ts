@@ -6,6 +6,7 @@ import {
   removeTracksSchema,
   getPlaylistSchema,
   getMyPlaylistsSchema,
+  disconnectSpotifySchema,
 } from "./schemas.js";
 import { searchTracks } from "../spotify/search.js";
 import { createPlaylist, getPlaylist, getMyPlaylists } from "../spotify/playlists.js";
@@ -248,12 +249,16 @@ or to find a playlist to modify.`,
 
   server.tool(
     "disconnect_spotify",
-    `Disconnect from Spotify by deleting all stored authentication tokens.
+    `DESTRUCTIVE: Disconnect from Spotify by deleting all stored authentication tokens.
 Use this if you want to switch accounts or revoke access.
-You will need to re-authorize on the next request.`,
-    {},
-    async (_params, _extra): Promise<ToolResult> => {
+You will need to re-authorize on the next request.
+Requires confirm: "DISCONNECT".`,
+    disconnectSpotifySchema.shape,
+    { ...DESTRUCTIVE_HINT }, async (params, _extra): Promise<ToolResult> => {
       try {
+        if (params.confirm !== "DISCONNECT") {
+          return spotifyErrorToMcp(new Error('confirm must be "DISCONNECT"'));
+        }
         await deleteTokens();
         return textResult(
           "Spotify disconnected. All stored tokens have been deleted.\nYou'll need to re-authorize on the next request."

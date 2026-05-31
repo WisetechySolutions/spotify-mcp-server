@@ -23,5 +23,12 @@ describe("playlist-items validation", () => {
         removeTracksFromPlaylist({ playlistId: "abc", trackUris: [] })
       ).rejects.toThrow("No track URIs provided");
     });
+
+    it("throws on > 100 URIs (runtime cap mirrors addTracksToPlaylist)", async () => {
+      const uris = Array(101).fill("spotify:track:abc");
+      await expect(
+        removeTracksFromPlaylist({ playlistId: "abc", trackUris: uris })
+      ).rejects.toThrow("Maximum 100 tracks");
+    });
   });
 });

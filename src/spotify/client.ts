@@ -171,33 +171,106 @@ export async function spotifyFetch(
     }
   };
 
-  const response = await makeRequest(token);
-
-  // Handle 429 rate limiting
-  if (response.status === 429 && !retried429) {
-    retried429 = true;
+  // Honor a Retry-After header, clamped to a sane bound. Shared by the
+  // first and (single) second 429 handling so the retry path is consistent.
+  const honorRetryAfter = async (response: Response): Promise<void> => {
     const rawRetryAfter = parseInt(response.headers.get("retry-after") ?? "5", 10);
-    const retryAfter = Math.min(Math.max(rawRetryAfter, 1), MAX_RETRY_AFTER_SECONDS);
+    const retryAfter = Math.min(
+      Math.max(Number.isFinite(rawRetryAfter) ? rawRetryAfter : 5, 1),
+      MAX_RETRY_AFTER_SECONDS
+    );
     rateLimiter.onRateLimited(retryAfter);
-
     await new Promise((r) => setTimeout(r, retryAfter * 1000));
     await rateLimiter.acquire();
-    return makeRequest(token);
-  }
+  };
 
-  // Handle 401 — try refresh and retry once
-  // SECURITY: Only invalidate if the token hasn't already been refreshed by another concurrent call
-  if (response.status === 401 && !retried401) {
-    retried401 = true;
-    if (_accessToken === token) {
-      _accessToken = null;
-      _tokenExpiresAt = 0;
+  // Bounded retry: each of 401 (refresh) and 429 (backoff) may fire at most
+  // once. The flags make a runaway loop structurally impossible — a second
+  // 429 or 401 after the single retry is surfaced to the caller as-is.
+  let response = await makeRequest(token);
+  let currentToken = token;
+
+  // The two conditions can chain (e.g. 401 -> refresh -> retry returns 429),
+  // so evaluate in a guarded sequence rather than independent if-blocks.
+  for (let i = 0; i < 2; i++) {
+    if (response.status === 429 && !retried429) {
+      retried429 = true;
+      await honorRetryAfter(response);
+      // Re-acquire the token in case it expired during the backoff sleep.
+      currentToken = await getAccessToken();
+      response = await makeRequest(currentToken);
+      continue;
     }
-    const newToken = await getAccessToken();
-    return makeRequest(newToken);
+
+    // Handle 401 — try refresh and retry once.
+    // SECURITY: Only invalidate if the token hasn't already been refreshed
+    // by another concurrent call.
+    if (response.status === 401 && !retried401) {
+      retried401 = true;
+      if (_accessToken === currentToken) {
+        _accessToken = null;
+        _tokenExpiresAt = 0;
+      }
+      currentToken = await getAccessToken();
+      response = await makeRequest(currentToken);
+      continue;
+    }
+
+    break;
   }
 
   return response;
+}
+
+/**
+ * Read a response body as text while enforcing a byte cap DURING transfer.
+ *
+ * SECURITY: Unlike `response.text()`, this streams the body through a reader
+ * and aborts as soon as the accumulated byte count exceeds the cap. A malicious
+ * or buggy upstream that omits/lies about Content-Length cannot force us to
+ * buffer an unbounded body into memory before the check runs. The reader is
+ * cancelled on overflow so the underlying connection is torn down promptly.
+ *
+ * Exported for testing.
+ */
+export async function readBodyWithCap(
+  response: Response,
+  maxBytes: number = MAX_RESPONSE_SIZE
+): Promise<string> {
+  const body = response.body;
+
+  // Environments without a streamable body: fall back to text() but still
+  // enforce the cap on the materialized result.
+  if (!body) {
+    const text = await response.text();
+    if (Buffer.byteLength(text, "utf8") > maxBytes) {
+      throw new Error("Spotify API response body exceeds maximum allowed size (1MB).");
+    }
+    return text;
+  }
+
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        received += value.byteLength;
+        if (received > maxBytes) {
+          throw new Error("Spotify API response body exceeds maximum allowed size (1MB).");
+        }
+        chunks.push(value);
+      }
+    }
+  } finally {
+    // Tear down the underlying connection on early exit (overflow/error).
+    await reader.cancel().catch(() => {});
+  }
+
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 /**
@@ -205,7 +278,8 @@ export async function spotifyFetch(
  * Use this instead of raw response.json() for defense-in-depth.
  *
  * SECURITY: Validates Content-Type header contains application/json
- * and enforces response body size limit.
+ * and enforces the response body size limit during transfer (streaming),
+ * not after a full download.
  */
 export async function safeParseJsonResponse(response: Response): Promise<unknown> {
   const contentType = response.headers.get("content-type") ?? "";
@@ -213,11 +287,8 @@ export async function safeParseJsonResponse(response: Response): Promise<unknown
     throw new Error(`Unexpected Content-Type from Spotify API: ${contentType.slice(0, 100)}`);
   }
 
-  // Read body as text first to enforce size limit
-  const text = await response.text();
-  if (text.length > MAX_RESPONSE_SIZE) {
-    throw new Error("Spotify API response body exceeds maximum allowed size (1MB).");
-  }
+  // Stream the body, enforcing the size cap as bytes arrive.
+  const text = await readBodyWithCap(response);
 
   // SECURITY: Reject prototype pollution attempts
   if (text.includes("__proto__") || text.includes("constructor.prototype")) {

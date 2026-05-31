@@ -68,3 +68,27 @@ In the event of unauthorized access to user data (including stored OAuth tokens)
 - Cloudflare Pages with full security headers (HSTS, CSP, X-Frame-Options, CORP, COOP, COEP)
 - No cookies, no tracking pixels, no fingerprinting
 - Cloudflare DDoS protection (always-on)
+
+## Dependency Audit Posture
+
+`npm audit` may report advisories in the transitive dependency tree pulled in by
+`@modelcontextprotocol/sdk` (historically: `hono`, `qs`, `fast-uri`,
+`ip-address`, `express-rate-limit`). We treat these seriously, but their
+real-world reachability in this project is effectively zero:
+
+- **stdio-only transport.** This server speaks the Model Context Protocol over
+  **stdio** (`StdioServerTransport`). It does **not** open a listening socket,
+  start an HTTP server, or expose any network transport. The HTTP/web-framework
+  code (`hono`, `express`, `express-rate-limit`, `qs`) that those advisories
+  affect is part of the SDK's *optional* HTTP/SSE transport, which this server
+  never imports or instantiates. That code path is unreachable at runtime.
+- **No untrusted HTTP parsing surface.** Because no HTTP transport is started,
+  there is no attacker-controlled request to reach the vulnerable parsers.
+- **Defense in depth regardless.** We still pin patched versions via a
+  `package.json` `overrides` block (`fast-uri`, `hono`, `ip-address`, `qs`) so
+  `npm audit` is clean and contributors are not desensitized to warnings. The
+  overrides are validated against the full test suite and a clean build.
+
+In short: the advisories are mitigated by transport posture (unreachable) **and**
+remediated by pinning (patched). A clean `npm audit --omit=dev` is maintained as
+a contributor-facing baseline.
